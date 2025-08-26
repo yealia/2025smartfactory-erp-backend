@@ -21,9 +21,16 @@ public class CustomerController {
     }
 
     // 단건 조회
-    @GetMapping("/{id}")
-    public Customer getCustomer(@PathVariable("id") String customer) {
-        return customerService.getCustomerById(customer);
+    @GetMapping("/{customerId}")
+    public Customer getCustomer(@PathVariable("customerId") String customer) {
+        return customerService.getCustomerByCustomerId(customer);
+    }
+
+    //모두저장
+    @PostMapping("/saveAll")
+    public List<Customer> saveAll(@RequestBody List<Customer> customers) {
+        return customerService.saveAll(customers);
+        // JPA가 id==null → insert, id!=null → update 처리
     }
 
     // 등록
@@ -33,9 +40,12 @@ public class CustomerController {
     }
 
     // 삭제
-    @DeleteMapping("/{id}")
-    public void deleteCustomer(@PathVariable("id") String customer) {
-        customerService.deleteCustomer(customer);
+    @DeleteMapping("/{customerId}")
+    public void deleteCustomer(@PathVariable String customerId) {
+        customerService.deleteCustomer(customerId);
     }
+
+
+
 
 }

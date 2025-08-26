@@ -2,12 +2,14 @@ package com.smartfactory.erp.service;
 
 import com.smartfactory.erp.entity.Customer;
 import com.smartfactory.erp.repository.CustomerRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+
 @RequiredArgsConstructor
 public class CustomerService {
     private final CustomerRepository customerRepository;
@@ -18,9 +20,14 @@ public class CustomerService {
     }
 
     // 단건 조회 (PK 기준)
-    public Customer getCustomerById(String customer) {
-        return customerRepository.findById(customer)
-                .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다. ID=" + customer));
+    public Customer getCustomerByCustomerId(String customerId) {
+        return customerRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다. customerId=" + customerId));
+    }
+
+    //saveAll
+    public List<Customer> saveAll(List<Customer> customers){
+        return customerRepository.saveAll(customers);
     }
 
     // 등록
@@ -29,7 +36,8 @@ public class CustomerService {
     }
 
     // 삭제 (PK 기준)
-    public void deleteCustomer(String customer) {
-        customerRepository.deleteById(customer);
+    @Transactional
+    public void deleteCustomer(String customerId) {
+        customerRepository.deleteByCustomerId(customerId);
     }
 }

@@ -7,7 +7,6 @@ import lombok.Data;
 @Table(name = "customers")
 @Data
 public class Customer {
-
     // 내부 식별자 (AUTO_INCREMENT)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

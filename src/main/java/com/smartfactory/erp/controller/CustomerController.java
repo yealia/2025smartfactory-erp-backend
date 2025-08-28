@@ -13,7 +13,6 @@ import java.util.List;
 public class CustomerController {
 
     private final CustomerService customerService;
-
     // 전체 조회
     @GetMapping
     public List<Customer> getAllCustomers() {

@@ -26,7 +26,6 @@ public class MaterialService {
         return materialRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("자재를 찾을 수 없습니다. ID=" + id));
     }
-
     // 삭제
     public void deleteMaterial(Integer id) {
         materialRepository.deleteById(id);

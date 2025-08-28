@@ -1,42 +1,61 @@
 package com.smartfactory.erp.service;
 
-import com.smartfactory.erp.entity.Customer;
+import com.smartfactory.erp.dto.CustomerDto;
+import com.smartfactory.erp.entity.CustomerEntity;
 import com.smartfactory.erp.repository.CustomerRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
+@Service //서비스
+@RequiredArgsConstructor // final 필드 생성자 자동 생성 (의존성 주입)
 public class CustomerService {
-    private final CustomerRepository customerRepository;
+
+    //CustomerRepository통해 DB를 연결해야하니 접근하기 위해 선언
+    private final CustomerRepository customerRepository;//불변
 
     // 전체 조회
-    public List<Customer> getAllCustomers() {
+    public List<CustomerEntity> getAllCustomers() {
         return customerRepository.findAll();
     }
+    //조건절 조회
+    public List<CustomerDto> getSearchCustomers(String customerNm, LocalDate contractDate){
+        List<CustomerEntity> result;
 
-    // 단건 조회 (PK 기준)
-    public Customer getCustomerByCustomerId(String customerId) {
-        return customerRepository.findByCustomerId(customerId)
-                .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다. customerId=" + customerId));
+        if (customerNm != null && contractDate != null) {
+            result = customerRepository.findByCustomerNmContainingAndContractDate(customerNm, contractDate);
+        } else if (customerNm != null) {
+            result = customerRepository.findByCustomerNmContaining(customerNm);
+        } else if (contractDate != null) {
+            result = customerRepository.findByContractDate(contractDate);
+        } else {
+            result = customerRepository.findAll();
+        }
+        return result.stream()
+                .map(CustomerDto::fromEntity) // 정상 작동
+                .toList();
     }
-
-    //saveAll
-    public List<Customer> saveAll(List<Customer> customers){
-        return customerRepository.saveAll(customers);
+    //상세 조회
+    public CustomerEntity getCustomer(String customerId) {
+        return customerRepository.findById(customerId)
+                .orElse(null);
     }
-
-    // 등록
-    public Customer saveCustomer(Customer customer) {
+    //등록/수정
+    @Transactional
+    public CustomerEntity saveCustomer(CustomerEntity customer){
         return customerRepository.save(customer);
     }
-
-    // 삭제 (PK 기준)
+    //여러 건 저장
+    @Transactional
+    public List<CustomerEntity> saveAllCustomers(List<CustomerEntity> customers){
+        return customerRepository.saveAll(customers);
+    }
+    //삭제
     @Transactional
     public void deleteCustomer(String customerId) {
-        customerRepository.deleteByCustomerId(customerId);
+        customerRepository.deleteById(customerId);
     }
 }

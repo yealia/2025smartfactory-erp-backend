@@ -16,7 +16,6 @@ public class UserController {
     @PostMapping("/login") //POST로 들어오면 실행되는 함수
     public LoginResponse login(@RequestBody LoginRequest request){
         boolean success = userService.login(request.getEmail(), request.getPassword());
-
         if(success){
             return new LoginResponse(true,"로그인 성공", request.email);
         }else{

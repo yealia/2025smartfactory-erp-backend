@@ -8,6 +8,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 @RestController //컨트롤러
@@ -17,42 +18,36 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    // 전체 조회
-//    @GetMapping
-//    public List<Customer> getAllCustomers() {
-//        return customerService.getAllCustomers();
-//    }
-
     //조건 조회
     @GetMapping
     public List<CustomerDto> getCustomers( String customerNm, LocalDate contractDate){
-        return customerService.getSearchCustomers(customerNm, contractDate);
+        //고객명 , 등록날짜 둘다 있는 경우
+        if (customerNm != null && contractDate != null) {
+            return customerService.getAllSearchCustomerContractDate(customerNm, contractDate);
+        } else if (customerNm != null) {
+            return customerService.getAllSearchCustomer(customerNm);
+        } else if (contractDate != null) {
+            return customerService.getAllSearchContractDate(contractDate);
+        } else {
+            return customerService.getAllSearch();
+        }
     }
-
-    // Querydsl 조건 검색 (고객명 + 계약일)
-//    @GetMapping()
-//    public List<CustomerDto> getCustomers(
-//            @RequestParam(required = false) String customerNm,
-//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate contractDate
-//    ) {
-//        return customerService.getSearchCustomers(customerNm, contractDate);
-//    }
 
     // 단건 조회
     @GetMapping("/{customerId}")
-    public CustomerEntity getCustomer(@PathVariable("customerId") String customer) {
+    public CustomerDto getCustomer(@PathVariable("customerId") String customer) {
         return customerService.getCustomer(customer);
     }
 
     //저장
     @PostMapping("")
-    public CustomerEntity saveCustomer(@RequestBody CustomerEntity customer){
+    public CustomerDto saveCustomer(@RequestBody CustomerDto customer){
         return customerService.saveCustomer(customer);
     }
 
     //모두저장
     @PostMapping("/saveAll")
-    public List<CustomerEntity> saveAll(@RequestBody List<CustomerEntity> customers) {
+    public List<CustomerDto> saveAll(@RequestBody List<CustomerDto> customers) {
         return customerService.saveAllCustomers(customers);
         // JPA가 id==null → insert, id!=null → update 처리
     }

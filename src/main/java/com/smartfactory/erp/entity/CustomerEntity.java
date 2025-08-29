@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 @Data //getter/setter/toString/Equals/HashCode
 @Entity //DB에서 어떤 테이블과 연결할지 지정

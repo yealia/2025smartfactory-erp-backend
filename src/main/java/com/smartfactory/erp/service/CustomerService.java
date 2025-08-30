@@ -29,9 +29,9 @@ public class CustomerService {
     private final CustomerRepository customerRepository;//불변
 
     // 전체 조회
-    public List<CustomerEntity> getAllCustomers() {
-        return customerRepository.findAll();
-    }
+//    public List<CustomerEntity> getAllCustomers() {
+//        return customerRepository.findAll();
+//    }
 
     //조건둘다 없을 경우
     public List<CustomerDto> getAllSearch(){

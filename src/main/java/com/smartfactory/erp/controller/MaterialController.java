@@ -6,11 +6,13 @@ import com.smartfactory.erp.entity.MaterialEntity;
 import com.smartfactory.erp.service.CustomerService;
 import com.smartfactory.erp.service.MaterialService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/materials")
 @RequiredArgsConstructor
@@ -48,6 +50,7 @@ public class MaterialController {
     //모두저장
     @PostMapping("/saveAll")
     public List<MaterialDto> saveAll(@RequestBody List<MaterialDto> materials) {
+        log.info("POST+++++++++++++++++{}", materials);
         return materialService.saveAllMaterials(materials);
         // JPA가 id==null → insert, id!=null → update 처리
     }

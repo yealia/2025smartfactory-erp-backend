@@ -28,6 +28,8 @@ public class MaterialDto {
     private LocalDate lastPurchaseDate; // 최근구매일
     private Integer status;           // 상태 (0:사용중, 1:단종, 2:대체필요)
     private String remark;            // 비고
+    private String warehouse;           //창고 
+    private String location;            //위치
 
     //dto -> entity로 변환
     public MaterialEntity toEntity(SupplierEntity supplierEntity){
@@ -48,6 +50,8 @@ public class MaterialDto {
         entity.setLastPurchaseDate(this.lastPurchaseDate);
         entity.setStatus(this.status);
         entity.setRemark(this.remark);
+        entity.setWarehouse(this.warehouse); //20250903 창고추가 
+        entity.setLocation(this.location); //20250903 위치추가
         return entity;
     }
     //entity -> dto
@@ -71,6 +75,8 @@ public class MaterialDto {
         dto.setLastPurchaseDate(entity.getLastPurchaseDate());
         dto.setStatus(entity.getStatus());
         dto.setRemark(entity.getRemark());
+        dto.setWarehouse(entity.getWarehouse()); //20250903 창고추가
+        dto.setLocation(entity.getLocation()); //20250903 위치추가
         return dto;
     }
 }

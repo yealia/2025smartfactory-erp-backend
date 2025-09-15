@@ -72,6 +72,7 @@ public class MaterialService {
         //2. 엔티티로 바꿔라
         //3. 레파에 보내라
         //4. 디티오로 바꿔라
+        log.info("POST {} ", material);
         SupplierEntity supplierEntity = supplierRepository.findById(material.getSupplierId())
                 .orElse(null);
         MaterialEntity materialEntity = materialRepository.save(material.toEntity(supplierEntity));
@@ -80,7 +81,7 @@ public class MaterialService {
     //여러 건 저장
     @Transactional
     public List<MaterialDto> saveAllMaterials(List<MaterialDto> materials){
-
+        log.info("POST+++++++++++++++++{}", materials);
         List<MaterialEntity> validationList = new ArrayList<>();
         for(MaterialDto materialDto : materials) {
             //공급업체 있는지 확인

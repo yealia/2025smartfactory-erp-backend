@@ -63,4 +63,11 @@ public class MaterialEntity {
 
     @Column(name = "remark", length = 255)
     private String remark; // 비고
+
+    //20250903추가
+    @Column(name = "warehouse", length = 20, nullable = false)
+    private String warehouse; // 창고
+
+    @Column(name = "location", length = 50, nullable = false)
+    private String location; // 위치
 }

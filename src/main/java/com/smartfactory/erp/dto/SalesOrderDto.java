@@ -42,8 +42,6 @@ public class SalesOrderDto {
         salesOrderEntity.setApprovedDate(this.approvedDate);
         salesOrderEntity.setApprovedBy(this.approvedBy);
         salesOrderEntity.setRemark(this.remark);
-        salesOrderEntity.setCreatedAt(this.createdAt);
-        salesOrderEntity.setUpdatedAt(this.updatedAt);
         return salesOrderEntity;
     }
 

@@ -2,9 +2,11 @@ package com.smartfactory.erp.service;
 
 import com.smartfactory.erp.dto.CustomerDto;
 import com.smartfactory.erp.dto.ProjectDto;
+import com.smartfactory.erp.entity.CustomerEntity;
 import com.smartfactory.erp.entity.ProjectEntity;
 import com.smartfactory.erp.repository.ProjectRepository;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -123,5 +125,4 @@ public class ProjectService {
                 .map(ProjectDto::fromEntity)
                 .toList();
     }
-
 }

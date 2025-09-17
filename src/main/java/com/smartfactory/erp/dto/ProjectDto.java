@@ -43,8 +43,6 @@ public class ProjectDto {
         projectEntity.setCustomerId(this.customerId);
         projectEntity.setEmployeeId(this.employeeId);
         projectEntity.setRemark(this.remark);
-        projectEntity.setCreatedAt(this.createdAt);
-        projectEntity.setUpdatedAt(this.updatedAt);
         return projectEntity;
     }
 

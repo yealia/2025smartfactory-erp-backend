@@ -44,6 +44,9 @@ public class InventoryEntity {
     @Column(name = "reorder_point", nullable = false)
     private Integer reorderPoint = 0;
 
+    @Column(name = "remark", length = 255)
+    private String remark;
+
     //생성일
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "datetime default current_timestamp")
@@ -58,5 +61,7 @@ public class InventoryEntity {
     @Version
     @Column(name = "version", nullable = false)
     private Integer version = 0;
+
+
 
 }

@@ -38,8 +38,6 @@ public class ProjectPlanDto {
         entity.setProgressRate(this.progressRate);
         entity.setStatus(this.status);
         entity.setRemark(this.remark);
-        entity.setCreatedAt(this.createdAt);
-        entity.setUpdatedAt(this.updatedAt);
         return entity;
     }
 

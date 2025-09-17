@@ -19,13 +19,6 @@ public class MovementService {
     private final MovementRepository movementRepository;
     private final InventoryService inventoryService; // ← 여기서 심볼 인식되어야 함
 
-    public List<MovementDto> findAll(){
-        return movementRepository.findAll()
-                .stream()
-                .map(MovementDto::fromEntity)
-                .toList();
-    }
-
     @Transactional
     public List<MovementDto> saveMovements(List<MovementDto> movementDtos){
         List<MovementEntity> toSave = new ArrayList<>();
@@ -44,5 +37,34 @@ public class MovementService {
         saved.forEach(inventoryService::applyMovement);
 
         return saved.stream().map(MovementDto::fromEntity).toList();
+    }
+
+    // 1. 조건이 둘 다 없을 경우 (전체 조회)
+    public List<MovementDto> findAll() {
+        return movementRepository.findAll().stream()
+                .map(MovementDto::fromEntity)
+                .toList();
+    }
+
+    // 2. 이력 ID만 있을 경우
+    public List<MovementDto> findByMovementId(Integer movementId) {
+        // findById는 Optional을 반환하므로, 리스트로 변환하는 처리가 필요
+        return movementRepository.findById(movementId)
+                .map(entity -> List.of(MovementDto.fromEntity(entity)))
+                .orElse(List.of()); // 결과가 없으면 빈 리스트 반환
+    }
+
+    // 3. 자재 ID만 있을 경우
+    public List<MovementDto> findByMaterialId(Integer materialId) {
+        return movementRepository.findByMaterialId(materialId).stream()
+                .map(MovementDto::fromEntity)
+                .toList();
+    }
+
+    // 4. 두 조건이 모두 있을 경우
+    public List<MovementDto> findByMovementIdAndMaterialId(Integer movementId, Integer materialId) {
+        return movementRepository.findByMovementIdAndMaterialId(movementId, materialId).stream()
+                .map(MovementDto::fromEntity)
+                .toList();
     }
 }

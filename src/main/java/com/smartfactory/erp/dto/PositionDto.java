@@ -2,6 +2,7 @@
 
 package com.smartfactory.erp.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartfactory.erp.entity.CustomerEntity;
 import com.smartfactory.erp.entity.PositionEntity;
 import lombok.Data;
@@ -14,7 +15,9 @@ public class PositionDto {
     private String positionNm;
     private String jobDescription;
     private String positionType;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     private Integer departmentId;
 
@@ -24,8 +27,6 @@ public class PositionDto {
         positionEntity.setPositionNm(this.positionNm);
         positionEntity.setJobDescription(this.jobDescription);
         positionEntity.setPositionType(this.positionType);
-        positionEntity.setCreatedAt(this.createdAt);
-        positionEntity.setUpdatedAt(this.updatedAt);
         positionEntity.setDepartmentId(this.departmentId);
         return positionEntity;
     }

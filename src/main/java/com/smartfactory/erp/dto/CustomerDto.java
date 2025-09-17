@@ -16,8 +16,8 @@ public class CustomerDto {
     private String contactEmail;
     private String contactAddress;
 
-
-    //dto -> entity로 변환
+    // 조회/삭제
+    //dto -> entity(db)로 변환
     public CustomerEntity toEntity(){
         CustomerEntity customerEntity = new CustomerEntity();
         customerEntity.setCustomerId(this.customerId);
@@ -29,7 +29,9 @@ public class CustomerDto {
         customerEntity.setContactAddress(this.contactAddress);
         return customerEntity;
     }
-    //entity -> dto
+
+    // 수정/등록
+    //entity(DB) -> dto
     public static CustomerDto fromEntity(CustomerEntity entity){
         CustomerDto dto = new CustomerDto();
         dto.setCustomerId(entity.getCustomerId());

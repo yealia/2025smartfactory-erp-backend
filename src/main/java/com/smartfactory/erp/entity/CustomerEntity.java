@@ -20,7 +20,7 @@ public class CustomerEntity {
 
     @Column(name = "contract_date")
     private LocalDate contractDate;
-    //Date : 불변 객체가 아니라서 값을 바꿀 수 있음 -> 버그 위험, 날짜와 시간 정보가 섞여있음
+    // Date : 불변 객체가 아니라서 값을 바꿀 수 있음 -> 버그 위험, 날짜와 시간 정보가 섞여있음
     // Date 타입 쓸려면 @Temporal(TemporalType.DATE)써야함
     // LocalDate : 날짜(연,원,일)다룸, 불변 객체라 안전함
 

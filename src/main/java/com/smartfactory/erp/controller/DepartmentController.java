@@ -3,11 +3,12 @@ package com.smartfactory.erp.controller;
 import com.smartfactory.erp.dto.DepartmentDto;
 import com.smartfactory.erp.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/departments")
 @RequiredArgsConstructor
@@ -15,25 +16,57 @@ public class DepartmentController {
 
     private final DepartmentService departmentService;
 
+    /**
+     * 🔍 동적 검색 (부서ID / 부서명)
+     */
     @GetMapping
-    public List<DepartmentDto> getDepartments( Integer departmentId, String departmentNm){
+    public List<DepartmentDto> searchDepartments(
+            @RequestParam(required = false) Integer departmentId,
+            @RequestParam(required = false) String departmentNm) {
+        return departmentService.searchDepartments(departmentId, departmentNm);
+    }
 
-        // 4. 두 조건이 모두 있는 경우
-        if (departmentId != null && departmentNm != null) {
-            return departmentService.findByIdAndName(departmentId, departmentNm);
-        }
-        // 2. 부서 ID만 있는 경우
-        else if (departmentId != null) {
-            return departmentService.findById(departmentId);
-        }
-        // 3. 부서명만 있는 경우
-        else if (departmentNm != null) {
-            return departmentService.findByName(departmentNm);
-        }
-        // 1. 아무 조건도 없는 경우
-        else {
-            return departmentService.findAll();
-        }
+    /**
+     * 👀 단건 조회
+     */
+    @GetMapping("/{departmentId}")
+    public DepartmentDto getDepartment(@PathVariable Integer departmentId) {
+        return departmentService.getDepartmentById(departmentId);
+    }
 
+    /**
+     * ➕ 등록 & 수정
+     */
+    @PostMapping
+    public DepartmentDto saveDepartment(@RequestBody DepartmentDto dto) {
+        return departmentService.saveDepartment(dto);
+    }
+
+    /**
+     * 📦 여러 건 저장
+     */
+    @PostMapping("/saveAll")
+    public List<DepartmentDto> saveAllDepartments(@RequestBody List<DepartmentDto> dtos) {
+        return departmentService.saveAllDepartments(dtos);
+    }
+
+    /**
+     * 📝 수정
+     */
+    @PutMapping("/{departmentId}")
+    public DepartmentDto updateDepartment(
+            @PathVariable Integer departmentId,
+            @RequestBody DepartmentDto dto) {
+        dto.setDepartmentId(departmentId);
+        return departmentService.saveDepartment(dto);
+    }
+
+    /**
+     * 🗑️ 삭제
+     */
+    @DeleteMapping("/{departmentId}")
+    public void deleteDepartment(@PathVariable Integer departmentId) {
+        log.info("삭제 요청 ID = {}", departmentId);
+        departmentService.deleteDepartment(departmentId);
     }
 }

@@ -1,14 +1,14 @@
 package com.smartfactory.erp.controller;
 
-import com.smartfactory.erp.dto.DepartmentDto;
 import com.smartfactory.erp.dto.EmployeeDto;
 import com.smartfactory.erp.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
@@ -16,26 +16,56 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
+    /**
+     * 🔍 동적 검색 (사원명, 부서명)
+     * - /api/employees?employeeNm=홍길동&departmentNm=생산팀
+     */
     @GetMapping
-    public List<EmployeeDto> getEmployees(String employeeNm, String departmentNm){
-
-        // 4. 두 조건이 모두 있는 경우
-        if ( employeeNm != null && departmentNm != null ) {
-            return employeeService. findByEmployeeNameAndDepartmentName(employeeNm, departmentNm);
-        }
-        // 2. 사원명만 있는 경우
-        else if (employeeNm != null) {
-            return employeeService.findByEmployeeName(employeeNm);
-        }
-        // 3. 부서명만 있는 경우
-        else if (departmentNm != null) {
-            return employeeService.findByDepartmentName(departmentNm);
-        }
-        // 1. 아무 조건도 없는 경우
-        else {
-            return employeeService.findAll();
-        }
-
+    public List<EmployeeDto> searchEmployees(
+            @RequestParam(required = false) String employeeNm,
+            @RequestParam(required = false) String departmentNm) {
+        return employeeService.searchEmployees(employeeNm, departmentNm);
     }
 
+    /**
+     * 👀 단건 조회
+     */
+    @GetMapping("/{employeeId}")
+    public EmployeeDto getEmployee(@PathVariable String employeeId) {
+        return employeeService.getEmployeeById(employeeId);
+    }
+
+    /**
+     * ➕ 단건 저장 (등록 & 수정)
+     */
+    @PostMapping
+    public EmployeeDto saveEmployee(@RequestBody EmployeeDto employeeDto) {
+        return employeeService.saveEmployee(employeeDto);
+    }
+
+    /**
+     * 📦 여러 건 저장
+     */
+    @PostMapping("/saveAll")
+    public List<EmployeeDto> saveAllEmployees(@RequestBody List<EmployeeDto> employeeDtos) {
+        return employeeService.saveAllEmployees(employeeDtos);
+    }
+
+    /**
+     * 📝 수정
+     */
+    @PutMapping("/{employeeId}")
+    public EmployeeDto updateEmployee(@PathVariable String employeeId, @RequestBody EmployeeDto employeeDto) {
+        employeeDto.setEmployeeId(employeeId); // 경로 ID를 DTO에 주입
+        return employeeService.saveEmployee(employeeDto);
+    }
+
+    /**
+     * 🗑️ 삭제
+     */
+    @DeleteMapping("/{employeeId}")
+    public void deleteEmployee(@PathVariable String employeeId) {
+        log.info("삭제 요청 ID = {}", employeeId);
+        employeeService.deleteEmployee(employeeId);
+    }
 }

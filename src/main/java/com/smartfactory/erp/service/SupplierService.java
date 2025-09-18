@@ -28,8 +28,8 @@ public class SupplierService {
                 .toList();
     }
     //고객명 조회
-    public List<SupplierDto> getAllSearchSupplier(String SupplierNm){
-        return supplierRepository.findBySupplierNmContaining(SupplierNm)
+    public List<SupplierDto> getAllSearchSupplier(String SupplierName){
+        return supplierRepository.findBySupplierNameContaining(SupplierName)
                 .stream()
                 .map(SupplierDto::fromEntity)
                 .toList();
@@ -42,8 +42,8 @@ public class SupplierService {
                 .toList();
     }
     //조건 둘다 조회
-    public List<SupplierDto> getAllSearchSupplierContracDate(String supplierNm, LocalDate contractDate){
-        return supplierRepository.findBySupplierNmContainingAndContractDate(supplierNm, contractDate)
+    public List<SupplierDto> getAllSearchSupplierContracDate(String supplierName, LocalDate contractDate){
+        return supplierRepository.findBySupplierNameContainingAndContractDate(supplierName, contractDate)
                 .stream()
                 .map(SupplierDto::fromEntity)
                 .toList();

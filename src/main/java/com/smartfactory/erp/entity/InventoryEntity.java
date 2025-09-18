@@ -2,66 +2,55 @@ package com.smartfactory.erp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
 
-@Data //getter/setter/toString/Equals/HashCode
-@Entity //DB에서 어떤 테이블과 연결할지 지정
-@Table(name = "inventory") //inventory 테이블
+@Data
+@Entity
+@Table(name = "inventory")
 public class InventoryEntity {
-    //재고ID
+
     @Id
-    @Column(name = "inventory_id", length = 20, nullable = false)
+    @Column(name = "inventory_id", nullable = false, length = 20)
     private String inventoryId;
 
-    //자재ID
-    @Column(name = "material_id", nullable = false)
+    // 🔽 DB 수정을 하지 않는 조회용 ID 필드
+    @Column(name = "material_id", nullable = false, insertable = false, updatable = false)
     private Integer materialId;
 
-    //창고
-    @Column(name = "warehouse", length = 20, nullable = false)
+    @Column(name = "warehouse", length = 20)
     private String warehouse;
 
-    //위치
-    @Column(name = "location", length = 50, nullable = false)
+    @Column(name = "location", nullable = false, length = 50)
     private String location;
 
-    //현재고
     @Column(name = "on_hand", nullable = false)
-    private Integer onHand = 0;
+    private Integer onHand;
 
-    //예약수량
     @Column(name = "reserved_qty", nullable = false)
-    private Integer reservedQty = 0;
+    private Integer reservedQty;
 
-    //안전재고
     @Column(name = "safety_stock", nullable = false)
-    private Integer safetyStock = 0;
+    private Integer safetyStock;
 
-    //재주문점
     @Column(name = "reorder_point", nullable = false)
-    private Integer reorderPoint = 0;
+    private Integer reorderPoint;
+
+    @Version // 낙관적 락을 위한 Version 필드
+    @Column(name = "version", nullable = false)
+    private Integer version;
 
     @Column(name = "remark", length = 255)
     private String remark;
 
-    //생성일
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "datetime default current_timestamp")
+    @Column(name = "created_at", updatable = false, insertable = false,
+            columnDefinition = "datetime default current_timestamp")
     private LocalDateTime createdAt;
 
-    //수정일
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false, columnDefinition = "datetime on update current_timestamp")
+    @Column(name = "updated_at", insertable = false,
+            columnDefinition = "datetime on update current_timestamp")
     private LocalDateTime updatedAt;
 
-    //버전
-    @Version
-    @Column(name = "version", nullable = false)
-    private Integer version = 0;
-
-
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "material_id")
+    private MaterialEntity material;
 }

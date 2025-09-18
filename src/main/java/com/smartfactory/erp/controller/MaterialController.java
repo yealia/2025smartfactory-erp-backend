@@ -22,16 +22,23 @@ public class MaterialController {
 
     //조건 조회
     @GetMapping
-    public List<MaterialDto> getMaterials(String materialNm, LocalDate contractDate){
-        //고객명 , 등록날짜 둘다 있는 경우
-        if (materialNm != null && contractDate != null) {
-            return materialService.getAllSearchMaterialContractDate(materialNm, contractDate);
-        } else if (materialNm != null) {
-            return materialService.getAllSearchMaterial(materialNm);
-        } else if (contractDate != null) {
-            return materialService.getAllSearchContractDate(contractDate);
-        } else {
-            return materialService.getAllSearch();
+    public List<MaterialDto> getMaterials(String materialNm, String category) {
+
+        // 4. 자재명과 자재 분류 조건이 모두 있는 경우
+        if (materialNm != null && !materialNm.isEmpty() && category != null && !category.isEmpty()) {
+            return materialService.findByNameAndCategory(materialNm, category);
+        }
+        // 2. 자재명만 있는 경우
+        else if (materialNm != null && !materialNm.isEmpty()) {
+            return materialService.findByMaterialName(materialNm);
+        }
+        // 3. 자재 분류만 있는 경우
+        else if (category != null && !category.isEmpty()) {
+            return materialService.findByCategory(category);
+        }
+        // 1. 아무 조건도 없는 경우 (전체 조회)
+        else {
+            return materialService.findAll();
         }
     }
 

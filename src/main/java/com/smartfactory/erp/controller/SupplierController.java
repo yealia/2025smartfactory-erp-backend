@@ -19,11 +19,11 @@ public class SupplierController {
     private  final SupplierService supplierService;
 
     @GetMapping
-    public List<SupplierDto> getSuppliers(String supplierNm, LocalDate contractDate) {
-        if (supplierNm != null && contractDate != null) {
-            return supplierService.getAllSearchSupplierContracDate(supplierNm, contractDate);
-        } else if (supplierNm != null) {
-            return supplierService.getAllSearchSupplier(supplierNm);
+    public List<SupplierDto> getSuppliers(String supplierName, LocalDate contractDate) {
+        if (supplierName != null && contractDate != null) {
+            return supplierService.getAllSearchSupplierContracDate(supplierName, contractDate);
+        } else if (supplierName != null) {
+            return supplierService.getAllSearchSupplier(supplierName);
         } else if (contractDate != null) {
             return supplierService.getAllSearchcontractDate(contractDate);
         } else {

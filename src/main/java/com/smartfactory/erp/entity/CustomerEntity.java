@@ -2,27 +2,32 @@ package com.smartfactory.erp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.time.LocalDate;
-import java.util.Date;
+import java.time.LocalDateTime;
 
-@Data //getter/setter/toString/Equals/HashCode
-@Entity //DB에서 어떤 테이블과 연결할지 지정
-@Table(name = "customers") //customers 테이블
-
+@Data
+@Entity
+@Table(name = "customers")
 public class CustomerEntity {
+
     @Id
-    @Column(name = "customer_id", length = 20, nullable = false)
+    @Column(name = "customer_id", nullable = false, length = 20)
     private String customerId;
 
-    @Column(name = "customer_nm", length = 50, nullable = false)
+    @Column(name = "customer_nm", nullable = false, length = 50)
     private String customerNm;
+
+    @Column(name = "business_registration", nullable = false, unique = true, length = 30)
+    private String businessRegistration;
 
     @Column(name = "contract_date")
     private LocalDate contractDate;
-    // Date : 불변 객체가 아니라서 값을 바꿀 수 있음 -> 버그 위험, 날짜와 시간 정보가 섞여있음
-    // Date 타입 쓸려면 @Temporal(TemporalType.DATE)써야함
-    // LocalDate : 날짜(연,원,일)다룸, 불변 객체라 안전함
+
+    @Column(name = "country_code", nullable = false, length = 2)
+    private String countryCode;
+
+    @Column(name = "status", nullable = false, length = 20)
+    private String status;
 
     @Column(name = "contact_person", length = 20)
     private String contactPerson;
@@ -35,4 +40,15 @@ public class CustomerEntity {
 
     @Column(name = "contact_address", length = 100)
     private String contactAddress;
+
+    @Column(name = "remark", length = 255)
+    private String remark;
+
+    @Column(name = "created_at", updatable = false, insertable = false,
+            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false,
+            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    private LocalDateTime updatedAt;
 }

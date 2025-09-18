@@ -25,33 +25,34 @@ public class MaterialService {
     private final MaterialRepository materialRepository;//불변
     private final SupplierRepository supplierRepository;//불변
 
-    //조건둘다 없을 경우
-    public List<MaterialDto> getAllSearch(){
+    // 1. 조건이 둘 다 없을 경우 (전체 조회)
+    public List<MaterialDto> findAll() {
         return materialRepository.findAll()
                 .stream()
                 .map(MaterialDto::fromEntity)
                 .toList();
     }
-    //고객명만 있을 때
-    public List<MaterialDto> getAllSearchMaterial(String materialNm){
+
+    // 2. 자재명만 있을 경우
+    public List<MaterialDto> findByMaterialName(String materialNm) {
         return materialRepository.findByMaterialNmContaining(materialNm)
                 .stream()
                 .map(MaterialDto::fromEntity)
                 .toList();
     }
-    //날짜만 있을때
-    public List<MaterialDto> getAllSearchContractDate(LocalDate contractDate){
-        System.out.println(contractDate);
-        log.info("parameter = {}",contractDate);
-        return materialRepository.findByContractDate(contractDate)
+
+    // 3. 자재 분류만 있을 경우
+    public List<MaterialDto> findByCategory(String category) {
+        return materialRepository.findByCategoryContaining(category)
                 .stream()
                 .map(MaterialDto::fromEntity)
                 .toList();
     }
-    //조건 둘 다 있을 때
-    public List<MaterialDto> getAllSearchMaterialContractDate(String  materialNm, LocalDate contractDate){
-        log.info("Controller 들어옴: materialNm={}, contractDate={}", materialNm, contractDate);
-        return materialRepository.findByMaterialNmContainingAndContractDate(materialNm, contractDate)
+
+    // 4. 두 조건이 모두 있을 경우
+    public List<MaterialDto> findByNameAndCategory(String materialNm, String category) {
+        log.info("Service called with: materialNm={}, category={}", materialNm, category);
+        return materialRepository.findByMaterialNmContainingAndCategoryContaining(materialNm, category)
                 .stream()
                 .map(MaterialDto::fromEntity)
                 .toList();

@@ -1,5 +1,6 @@
 package com.smartfactory.erp.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartfactory.erp.entity.VesselEntity;
 import lombok.Data;
 
@@ -22,7 +23,9 @@ public class VesselDto {
     private LocalDate actualDeliveryDate;
     private String projectId;
     private String remark;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
 
@@ -39,10 +42,7 @@ public class VesselDto {
         entity.setStatus(this.status);
         entity.setVesselDepth(this.vesselDepth);
         entity.setActualDeliveryDate(this.actualDeliveryDate);
-        entity.setProjectId(this.projectId);
         entity.setRemark(this.remark);
-        entity.setCreatedAt(this.createdAt);
-        entity.setUpdatedAt(this.updatedAt);
         return entity;
     }
 
@@ -59,7 +59,11 @@ public class VesselDto {
         dto.setStatus(entity.getStatus());
         dto.setVesselDepth(entity.getVesselDepth());
         dto.setActualDeliveryDate(entity.getActualDeliveryDate());
-        dto.setProjectId(entity.getProjectId());
+
+        if (entity.getProject() != null) {
+            dto.setProjectId(entity.getProject().getProjectId());
+        }
+
         dto.setRemark(entity.getRemark());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());

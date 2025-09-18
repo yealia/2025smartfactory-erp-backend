@@ -2,10 +2,10 @@ package com.smartfactory.erp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 public class ProjectEntity {
 
     @Id
-    @Column(name = "project_id", length = 20, nullable = false)
+    @Column(name = "project_id", nullable = false, length = 20)
     private String projectId;
 
-    @Column(name = "project_nm", length = 50, nullable = false)
+    @Column(name = "project_nm", nullable = false, length = 50)
     private String projectNm;
 
     @Column(name = "start_date")
@@ -34,20 +34,14 @@ public class ProjectEntity {
     @Column(name = "execution_budget", precision = 20, scale = 2)
     private BigDecimal executionBudget;
 
-    @Column(name = "currency_code", length = 3, nullable = false)
+    @Column(name = "currency_code", nullable = false, length = 3)
     private String currencyCode = "KRW";
 
-    @Column(name = "progress_rate", precision = 5, scale = 2, nullable = false)
-    private BigDecimal progressRate = BigDecimal.valueOf(0);
+    @Column(name = "progress_rate", nullable = false, precision = 5, scale = 2)
+    private BigDecimal progressRate;
 
     @Column(name = "priority", nullable = false)
     private Integer priority;
-
-    @Column(name = "customer_id", length = 20, nullable = false)
-    private String customerId;
-
-    @Column(name = "employee_id", length = 20, nullable = false)
-    private String employeeId;
 
     @Column(name = "remark", length = 255)
     private String remark;
@@ -59,4 +53,18 @@ public class ProjectEntity {
     @Column(name = "updated_at", insertable = false,
             columnDefinition = "datetime on update current_timestamp")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private CustomerEntity customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private EmployeeEntity employee;
+
+    @OneToMany(mappedBy = "project")
+    private List<VesselEntity> vessels;
+
+    @OneToMany(mappedBy = "project")
+    private List<ProjectPlanEntity> projectPlans;
 }

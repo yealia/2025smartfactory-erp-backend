@@ -10,27 +10,44 @@ import java.util.List;
 @Repository
 public interface ProjectPlanRepository extends JpaRepository<ProjectPlanEntity, String> {
 
-// ## 조건이 1개인 경우 (4가지) ##
-    List<ProjectPlanEntity> findByProjectId(String projectId);
-    List<ProjectPlanEntity> findByVesselId(String vesselId);
-    List<ProjectPlanEntity> findByStartDateBetween(LocalDate startDate, LocalDate endDate);
+    // 1개 조건
+    List<ProjectPlanEntity> findByProject_ProjectId(String projectId);
+    List<ProjectPlanEntity> findByVessel_VesselId(String vesselId);
+    List<ProjectPlanEntity> findByStartDate(LocalDate startDate);
+    List<ProjectPlanEntity> findByEndDate(LocalDate endDate);
     List<ProjectPlanEntity> findByStatus(Integer status);
 
-// ## 조건이 2개인 경우 (6가지) ##
-    List<ProjectPlanEntity> findByProjectIdAndVesselId(String projectId, String vesselId);
-    List<ProjectPlanEntity> findByProjectIdAndStartDateBetween(String projectId, LocalDate startDate, LocalDate endDate);
-    List<ProjectPlanEntity> findByProjectIdAndStatus(String projectId, Integer status);
-    List<ProjectPlanEntity> findByVesselIdAndStartDateBetween(String vesselId, LocalDate startDate, LocalDate endDate);
-    List<ProjectPlanEntity> findByVesselIdAndStatus(String vesselId, Integer status);
-    List<ProjectPlanEntity> findByStartDateBetweenAndStatus(LocalDate startDate, LocalDate endDate, Integer status);
+    // 2개 조건
+    List<ProjectPlanEntity> findByProject_ProjectIdAndVessel_VesselId(String projectId, String vesselId);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndStartDate(String projectId, LocalDate startDate);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndEndDate(String projectId, LocalDate endDate);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndStatus(String projectId, Integer status);
+    List<ProjectPlanEntity> findByVessel_VesselIdAndStartDate(String vesselId, LocalDate startDate);
+    List<ProjectPlanEntity> findByVessel_VesselIdAndEndDate(String vesselId, LocalDate endDate);
+    List<ProjectPlanEntity> findByVessel_VesselIdAndStatus(String vesselId, Integer status);
+    List<ProjectPlanEntity> findByStartDateAndEndDate(LocalDate startDate, LocalDate endDate);
+    List<ProjectPlanEntity> findByStartDateAndStatus(LocalDate startDate, Integer status);
+    List<ProjectPlanEntity> findByEndDateAndStatus(LocalDate endDate, Integer status);
 
-// ## 조건이 3개인 경우 (4가지) ##
+    // 3개 조건
+    List<ProjectPlanEntity> findByProject_ProjectIdAndVessel_VesselIdAndStartDate(String projectId, String vesselId, LocalDate startDate);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndVessel_VesselIdAndEndDate(String projectId, String vesselId, LocalDate endDate);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndVessel_VesselIdAndStatus(String projectId, String vesselId, Integer status);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndStartDateAndEndDate(String projectId, LocalDate startDate, LocalDate endDate);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndStartDateAndStatus(String projectId, LocalDate startDate, Integer status);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndEndDateAndStatus(String projectId, LocalDate endDate, Integer status);
+    List<ProjectPlanEntity> findByVessel_VesselIdAndStartDateAndEndDate(String vesselId, LocalDate startDate, LocalDate endDate);
+    List<ProjectPlanEntity> findByVessel_VesselIdAndStartDateAndStatus(String vesselId, LocalDate startDate, Integer status);
+    List<ProjectPlanEntity> findByVessel_VesselIdAndEndDateAndStatus(String vesselId, LocalDate endDate, Integer status);
+    List<ProjectPlanEntity> findByStartDateAndEndDateAndStatus(LocalDate startDate, LocalDate endDate, Integer status);
 
-    List<ProjectPlanEntity> findByProjectIdAndVesselIdAndStartDateBetween(String projectId, String vesselId, LocalDate startDate, LocalDate endDate);
-    List<ProjectPlanEntity> findByProjectIdAndVesselIdAndStatus(String projectId, String vesselId, Integer status);
-    List<ProjectPlanEntity> findByProjectIdAndStartDateBetweenAndStatus(String projectId, LocalDate startDate, LocalDate endDate, Integer status);
-    List<ProjectPlanEntity> findByVesselIdAndStartDateBetweenAndStatus(String vesselId, LocalDate startDate, LocalDate endDate, Integer status);
+    // 4개 조건
+    List<ProjectPlanEntity> findByProject_ProjectIdAndVessel_VesselIdAndStartDateAndEndDate(String projectId, String vesselId, LocalDate startDate, LocalDate endDate);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndVessel_VesselIdAndStartDateAndStatus(String projectId, String vesselId, LocalDate startDate, Integer status);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndVessel_VesselIdAndEndDateAndStatus(String projectId, String vesselId, LocalDate endDate, Integer status);
+    List<ProjectPlanEntity> findByProject_ProjectIdAndStartDateAndEndDateAndStatus(String projectId, LocalDate startDate, LocalDate endDate, Integer status);
+    List<ProjectPlanEntity> findByVessel_VesselIdAndStartDateAndEndDateAndStatus(String vesselId, LocalDate startDate, LocalDate endDate, Integer status);
 
-// ## 조건이 4개인 경우 (1가지) ##
-    List<ProjectPlanEntity> findByProjectIdAndVesselIdAndStartDateBetweenAndStatus(String projectId, String vesselId, LocalDate startDate, LocalDate endDate, Integer status);
+    // 5개 조건
+    List<ProjectPlanEntity> findByProject_ProjectIdAndVessel_VesselIdAndStartDateAndEndDateAndStatus(String projectId, String vesselId, LocalDate startDate, LocalDate endDate, Integer status);
 }

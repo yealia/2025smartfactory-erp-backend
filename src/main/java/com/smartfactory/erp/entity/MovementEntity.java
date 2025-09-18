@@ -17,7 +17,8 @@ public class MovementEntity {
     @Column(name = "occurred_at", nullable = false)
     private LocalDateTime occurredAt;
 
-    @Column(name = "material_id", nullable = false)
+    // 🔽 DB 수정을 하지 않는 조회용 ID 필드
+    @Column(name = "material_id", nullable = false, insertable = false, updatable = false)
     private Integer materialId;
 
     @Column(name = "qty", nullable = false)
@@ -56,8 +57,7 @@ public class MovementEntity {
     @Column(name = "remark", length = 255)
     private String remark;
 
-    @Column(name = "created_at", updatable = false, insertable = false,
-            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "idempotency_key", nullable = false, unique = true, length = 100)
@@ -65,4 +65,8 @@ public class MovementEntity {
 
     @Column(name = "work_order_id")
     private Integer workOrderId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "material_id")
+    private MaterialEntity material;
 }

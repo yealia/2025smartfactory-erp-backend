@@ -2,26 +2,18 @@ package com.smartfactory.erp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 
 @Data
 @Entity
 @Table(name = "project_plans")
 public class ProjectPlanEntity {
+
     @Id
-    @Column(name = "plan_id", length = 30, nullable = false)
+    @Column(name = "plan_id", nullable = false, length = 30)
     private String planId;
-
-    @Column(name = "project_id", length = 20, nullable = false)
-    private String projectId;
-
-    @Column(name = "vessel_id", length = 20, nullable = false)
-    private String vesselId;
 
     @Column(name = "plan_scope", length = 30)
     private String planScope;
@@ -32,13 +24,13 @@ public class ProjectPlanEntity {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(name = "progress_rate", precision = 5, scale = 2, nullable = false)
-    private BigDecimal progressRate = BigDecimal.ZERO;
+    @Column(name = "progress_rate", nullable = false, precision = 5, scale = 2)
+    private BigDecimal progressRate;
 
     @Column(name = "status")
-    private Integer status = 0;
+    private Integer status;
 
-    @Column(name = "remark")
+    @Column(name = "remark", length = 255)
     private String remark;
 
     @Column(name = "created_at", updatable = false, insertable = false,
@@ -48,4 +40,12 @@ public class ProjectPlanEntity {
     @Column(name = "updated_at", insertable = false,
             columnDefinition = "datetime on update current_timestamp")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private ProjectEntity project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vessel_id")
+    private VesselEntity vessel;
 }

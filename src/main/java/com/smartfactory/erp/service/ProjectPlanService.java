@@ -1,218 +1,127 @@
 package com.smartfactory.erp.service;
 
 import com.smartfactory.erp.dto.ProjectPlanDto;
+import com.smartfactory.erp.entity.ProjectEntity;
+import com.smartfactory.erp.entity.ProjectPlanEntity;
+import com.smartfactory.erp.entity.VesselEntity;
 import com.smartfactory.erp.repository.ProjectPlanRepository;
+import com.smartfactory.erp.repository.ProjectRepository;
+import com.smartfactory.erp.repository.VesselRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ProjectPlanService {
+public class ProjectPlanService { // 인터페이스가 아닌 클래스로 직접 정의
 
     private final ProjectPlanRepository projectPlanRepository;
+    private final ProjectRepository projectRepository;
+    private final VesselRepository vesselRepository;
 
-    // =========================
-    // 조건별 검색 메서드
-    // =========================
+    @Transactional
+    public ProjectPlanDto createPlan(ProjectPlanDto dto) {
+        ProjectEntity project = projectRepository.findById(dto.getProjectId())
+                .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + dto.getProjectId()));
+        VesselEntity vessel = vesselRepository.findById(dto.getVesselId())
+                .orElseThrow(() -> new EntityNotFoundException("Vessel not found with id: " + dto.getVesselId()));
 
-    // 조건이 없을 때 (전체 조회)
-    public List<ProjectPlanDto> searchAllPlans() {
-        return projectPlanRepository.findAll().stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
+        ProjectPlanEntity entity = dto.toEntity();
+
+        // ================== ID 생성 로직 수정 ==================
+        // 1. 연도를 기반으로 ID 접두사 생성 (예: "PP-2025-")
+        String yearPrefix = "PP-" + LocalDate.now().getYear() + "-";
+
+        // 2. DB에서 해당 연도의 마지막 plan ID를 조회
+        Optional<ProjectPlanEntity> lastPlanOpt = projectPlanRepository.findTopByPlanIdStartingWithOrderByPlanIdDesc(yearPrefix);
+
+        int nextSeq = 1; // 기본 순번은 1로 시작
+        if (lastPlanOpt.isPresent()) {
+            // 3. 마지막 ID가 있다면, 순번을 추출하여 1을 더함
+            String lastPlanId = lastPlanOpt.get().getPlanId(); // 예: "PP-2025-004"
+            String seqStr = lastPlanId.substring(yearPrefix.length()); // "004"
+            nextSeq = Integer.parseInt(seqStr) + 1; // 4 + 1 = 5
+        }
+
+        // 4. 새로운 순번을 3자리 문자열로 포맷팅 (예: 5 -> "005")
+        String newPlanId = yearPrefix + String.format("%03d", nextSeq);
+
+        // 5. 생성된 ID를 Entity에 설정
+        entity.setPlanId(newPlanId);
+
+        entity.setProject(project);
+        entity.setVessel(vessel);
+
+        ProjectPlanEntity savedEntity = projectPlanRepository.save(entity);
+        return ProjectPlanDto.fromEntity(savedEntity);
     }
 
-    // --- 조건이 1개인 경우 ---
-    public List<ProjectPlanDto> searchByProjectId(String projectId) {
-        return projectPlanRepository.findByProject_ProjectId(projectId).stream()
+    @Transactional
+    public ProjectPlanDto getPlanById(String planId) {
+        return projectPlanRepository.findById(planId)
                 .map(ProjectPlanDto::fromEntity)
-                .toList();
+                .orElseThrow(() -> new EntityNotFoundException("Project Plan not found with id: " + planId));
     }
 
-    public List<ProjectPlanDto> searchByVesselId(String vesselId) {
-        return projectPlanRepository.findByVessel_VesselId(vesselId).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
+    @Transactional
+    public ProjectPlanDto updatePlan(String planId, ProjectPlanDto dto) {
+        ProjectPlanEntity existingEntity = projectPlanRepository.findById(planId)
+                .orElseThrow(() -> new EntityNotFoundException("Project Plan not found with id: " + planId));
+
+        existingEntity.setPlanScope(dto.getPlanScope());
+        existingEntity.setStartDate(dto.getStartDate());
+        existingEntity.setEndDate(dto.getEndDate());
+        existingEntity.setProgressRate(dto.getProgressRate());
+        existingEntity.setStatus(dto.getStatus());
+        existingEntity.setRemark(dto.getRemark());
+
+        return ProjectPlanDto.fromEntity(existingEntity);
     }
 
-    public List<ProjectPlanDto> searchByStartDate(LocalDate startDate) {
-        return projectPlanRepository.findByStartDate(startDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
+    @Transactional
+    public void deletePlan(String planId) {
+        if (!projectPlanRepository.existsById(planId)) {
+            throw new EntityNotFoundException("Project Plan not found with id: " + planId);
+        }
+        projectPlanRepository.deleteById(planId);
     }
 
-    public List<ProjectPlanDto> searchByEndDate(LocalDate endDate) {
-        return projectPlanRepository.findByEndDate(endDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
+    @Transactional
+    public List<ProjectPlanDto> search(String projectId, String vesselId, LocalDate startDate, LocalDate endDate, Integer status) {
+        Specification<ProjectPlanEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-    public List<ProjectPlanDto> searchByStatus(Integer status) {
-        return projectPlanRepository.findByStatus(status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
+            if (projectId != null && !projectId.isEmpty()) {
+                predicates.add(cb.equal(root.get("project").get("projectId"), projectId));
+            }
+            if (vesselId != null && !vesselId.isEmpty()) {
+                predicates.add(cb.equal(root.get("vessel").get("vesselId"), vesselId));
+            }
+            if (startDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("startDate"), startDate));
+            }
+            if (endDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("endDate"), endDate));
+            }
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
 
-    // --- 조건이 2개인 경우 ---
-    public List<ProjectPlanDto> searchByProjectIdAndVesselId(String projectId, String vesselId) {
-        return projectPlanRepository.findByProject_ProjectIdAndVessel_VesselId(projectId, vesselId).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
 
-    public List<ProjectPlanDto> searchByProjectIdAndStartDate(String projectId, LocalDate startDate) {
-        return projectPlanRepository.findByProject_ProjectIdAndStartDate(projectId, startDate).stream()
+        return projectPlanRepository.findAll(spec).stream()
                 .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndEndDate(String projectId, LocalDate endDate) {
-        return projectPlanRepository.findByProject_ProjectIdAndEndDate(projectId, endDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndStatus(String projectId, Integer status) {
-        return projectPlanRepository.findByProject_ProjectIdAndStatus(projectId, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByVesselIdAndStartDate(String vesselId, LocalDate startDate) {
-        return projectPlanRepository.findByVessel_VesselIdAndStartDate(vesselId, startDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByVesselIdAndEndDate(String vesselId, LocalDate endDate) {
-        return projectPlanRepository.findByVessel_VesselIdAndEndDate(vesselId, endDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByVesselIdAndStatus(String vesselId, Integer status) {
-        return projectPlanRepository.findByVessel_VesselIdAndStatus(vesselId, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByStartDateAndEndDate(LocalDate startDate, LocalDate endDate) {
-        return projectPlanRepository.findByStartDateAndEndDate(startDate, endDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByStartDateAndStatus(LocalDate startDate, Integer status) {
-        return projectPlanRepository.findByStartDateAndStatus(startDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByEndDateAndStatus(LocalDate endDate, Integer status) {
-        return projectPlanRepository.findByEndDateAndStatus(endDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    // --- 조건이 3개인 경우 ---
-    public List<ProjectPlanDto> searchByProjectIdAndVesselIdAndStartDate(String projectId, String vesselId, LocalDate startDate) {
-        return projectPlanRepository.findByProject_ProjectIdAndVessel_VesselIdAndStartDate(projectId, vesselId, startDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndVesselIdAndEndDate(String projectId, String vesselId, LocalDate endDate) {
-        return projectPlanRepository.findByProject_ProjectIdAndVessel_VesselIdAndEndDate(projectId, vesselId, endDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndVesselIdAndStatus(String projectId, String vesselId, Integer status) {
-        return projectPlanRepository.findByProject_ProjectIdAndVessel_VesselIdAndStatus(projectId, vesselId, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndStartDateAndEndDate(String projectId, LocalDate startDate, LocalDate endDate) {
-        return projectPlanRepository.findByProject_ProjectIdAndStartDateAndEndDate(projectId, startDate, endDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndStartDateAndStatus(String projectId, LocalDate startDate, Integer status) {
-        return projectPlanRepository.findByProject_ProjectIdAndStartDateAndStatus(projectId, startDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndEndDateAndStatus(String projectId, LocalDate endDate, Integer status) {
-        return projectPlanRepository.findByProject_ProjectIdAndEndDateAndStatus(projectId, endDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByVesselIdAndStartDateAndEndDate(String vesselId, LocalDate startDate, LocalDate endDate) {
-        return projectPlanRepository.findByVessel_VesselIdAndStartDateAndEndDate(vesselId, startDate, endDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByVesselIdAndStartDateAndStatus(String vesselId, LocalDate startDate, Integer status) {
-        return projectPlanRepository.findByVessel_VesselIdAndStartDateAndStatus(vesselId, startDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByVesselIdAndEndDateAndStatus(String vesselId, LocalDate endDate, Integer status) {
-        return projectPlanRepository.findByVessel_VesselIdAndEndDateAndStatus(vesselId, endDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByStartDateAndEndDateAndStatus(LocalDate startDate, LocalDate endDate, Integer status) {
-        return projectPlanRepository.findByStartDateAndEndDateAndStatus(startDate, endDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    // --- 조건이 4개인 경우 ---
-    public List<ProjectPlanDto> searchByProjectIdAndVesselIdAndStartDateAndEndDate(String projectId, String vesselId, LocalDate startDate, LocalDate endDate) {
-        return projectPlanRepository.findByProject_ProjectIdAndVessel_VesselIdAndStartDateAndEndDate(projectId, vesselId, startDate, endDate).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndVesselIdAndStartDateAndStatus(String projectId, String vesselId, LocalDate startDate, Integer status) {
-        return projectPlanRepository.findByProject_ProjectIdAndVessel_VesselIdAndStartDateAndStatus(projectId, vesselId, startDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndVesselIdAndEndDateAndStatus(String projectId, String vesselId, LocalDate endDate, Integer status) {
-        return projectPlanRepository.findByProject_ProjectIdAndVessel_VesselIdAndEndDateAndStatus(projectId, vesselId, endDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByProjectIdAndStartDateAndEndDateAndStatus(String projectId, LocalDate startDate, LocalDate endDate, Integer status) {
-        return projectPlanRepository.findByProject_ProjectIdAndStartDateAndEndDateAndStatus(projectId, startDate, endDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectPlanDto> searchByVesselIdAndStartDateAndEndDateAndStatus(String vesselId, LocalDate startDate, LocalDate endDate, Integer status) {
-        return projectPlanRepository.findByVessel_VesselIdAndStartDateAndEndDateAndStatus(vesselId, startDate, endDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
-    }
-
-    // --- 조건이 5개인 경우 ---
-    public List<ProjectPlanDto> searchByAllConditions(String projectId, String vesselId, LocalDate startDate, LocalDate endDate, Integer status) {
-        return projectPlanRepository.findByProject_ProjectIdAndVessel_VesselIdAndStartDateAndEndDateAndStatus(projectId, vesselId, startDate, endDate, status).stream()
-                .map(ProjectPlanDto::fromEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

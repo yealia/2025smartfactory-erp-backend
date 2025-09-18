@@ -37,8 +37,6 @@ public class EmployeeDto {
         entity.setPhone(this.phone);
         entity.setEmail(this.email);
         entity.setEmployeeStatus(this.employeeStatus);
-        entity.setCreatedAt(this.createdAt);
-        entity.setUpdatedAt(this.updatedAt);
         return entity;
     }
 
@@ -55,6 +53,7 @@ public class EmployeeDto {
         dto.setEmployeeStatus(entity.getEmployeeStatus());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
+
 
         // ✅ [수정] 연관된 Entity가 null이 아닐 때만 이름을 가져오도록 처리
         if (entity.getDepartment() != null) {

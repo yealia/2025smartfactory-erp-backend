@@ -41,7 +41,7 @@ public class CustomerController {
 
     //저장
     @PostMapping("")
-    public CustomerDto saveCustomer(@RequestBody CustomerDto customer){
+    public CustomerDto createCustomer(@RequestBody CustomerDto customer){
         return customerService.saveCustomer(customer);
     }
 
@@ -50,6 +50,12 @@ public class CustomerController {
     public List<CustomerDto> saveAll(@RequestBody List<CustomerDto> customers) {
         return customerService.saveAllCustomers(customers);
         // JPA가 id==null → insert, id!=null → update 처리
+    }
+
+    @PutMapping("/{customerId}")
+    public CustomerDto updateCustomer(@PathVariable String customerId, @RequestBody CustomerDto customerDto) {
+        customerDto.setCustomerId(customerId);
+        return customerService.saveCustomer(customerDto);
     }
 
     // 삭제

@@ -10,24 +10,25 @@ import java.time.LocalDateTime;
 
 @Data
 public class ProjectDto {
-    private String projectId;             // 프로젝트 ID
-    private String projectNm;             // 프로젝트명
-    private LocalDate startDate;          // 시작일
-    private LocalDate deliveryDate;       // 납기일
-    private LocalDate actualDeliveryDate; // 실제 납기일
-    private BigDecimal totalBudget;       // 총 예산
-    private BigDecimal executionBudget;   // 집행 예산
-    private String currencyCode;          // 통화 코드
-    private BigDecimal progressRate;      // 진행률
-    private Integer priority;             // 우선순위
-    private String customerId;            // 고객 ID
-    private String employeeId;            // 담당자 ID
-    private String remark;                // 비고
+    private String projectId;
+    private String projectNm;
+    private LocalDate startDate;
+    private LocalDate deliveryDate;
+    private LocalDate actualDeliveryDate;
+    private BigDecimal totalBudget;
+    private BigDecimal executionBudget;
+    private String currencyCode;
+    private BigDecimal progressRate;
+    private Integer priority;
+    private String customerId;
+    private String employeeId;
+    private String remark;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;      // 생성일
+    private LocalDateTime createdAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;      // 수정일
+    private LocalDateTime updatedAt;
 
+    // DTO -> Entity 변환 (Service 계층에서 관계 설정 필요)
     public ProjectEntity toEntity() {
         ProjectEntity projectEntity = new ProjectEntity();
         projectEntity.setProjectId(this.projectId);
@@ -40,14 +41,12 @@ public class ProjectDto {
         projectEntity.setCurrencyCode(this.currencyCode);
         projectEntity.setProgressRate(this.progressRate);
         projectEntity.setPriority(this.priority);
-        projectEntity.setCustomerId(this.customerId);
-        projectEntity.setEmployeeId(this.employeeId);
         projectEntity.setRemark(this.remark);
-        projectEntity.setCreatedAt(this.createdAt);
-        projectEntity.setUpdatedAt(this.updatedAt);
+        // customer와 employee는 Service단에서 찾아서 직접 설정
         return projectEntity;
     }
 
+    // Entity -> DTO 변환
     public static ProjectDto fromEntity(ProjectEntity entity){
         ProjectDto dto = new ProjectDto();
         dto.setProjectId(entity.getProjectId());
@@ -60,8 +59,14 @@ public class ProjectDto {
         dto.setCurrencyCode(entity.getCurrencyCode());
         dto.setProgressRate(entity.getProgressRate());
         dto.setPriority(entity.getPriority());
-        dto.setCustomerId(entity.getCustomerId());
-        dto.setEmployeeId(entity.getEmployeeId());
+
+        if (entity.getCustomer() != null) {
+            dto.setCustomerId(entity.getCustomer().getCustomerId());
+        }
+        if (entity.getEmployee() != null) {
+            dto.setEmployeeId(entity.getEmployee().getEmployeeId());
+        }
+
         dto.setRemark(entity.getRemark());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());

@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface SupplierRepository extends JpaRepository<SupplierEntity, Integer> {
-    List<SupplierEntity> findBySupplierNmContaining(String supplierNm);
+    List<SupplierEntity> findBySupplierNameContaining(String supplierName);
     List<SupplierEntity> findByContractDate(LocalDate contractDate);
-    List<SupplierEntity> findBySupplierNmContainingAndContractDate(String supplierNm, LocalDate contractDate);
+    List<SupplierEntity> findBySupplierNameContainingAndContractDate(String supplierName, LocalDate contractDate);
 }

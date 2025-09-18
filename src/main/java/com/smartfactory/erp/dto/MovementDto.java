@@ -21,35 +21,34 @@ public class MovementDto {
     private String sourceType;
     private String purchaseOrderId;
     private Integer orderDetailId;
-    private Long qcId;
+    private Integer qcId;
     private String userId;
     private String remark;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime createdAt;
     private String idempotencyKey;
-    private Long workOrderId;
+    private Integer workOrderId;
 
     /** DTO -> Entity (빌더 사용 안 함) */
     public MovementEntity toEntity() {
         MovementEntity entity = new MovementEntity();
-        entity.setMovementId(this.getMovementId());            // 보통 null (AUTO_INCREMENT)
-        entity.setOccurredAt(this.getOccurredAt());
-        entity.setMaterialId(this.getMaterialId());
-        entity.setQty(this.getQty());
-        entity.setWarehouseFrom(this.getWarehouseFrom());
-        entity.setWarehouseTo(this.getWarehouseTo());
-        entity.setLocationFrom(this.getLocationFrom());
-        entity.setLocationTo(this.getLocationTo());
-        entity.setMovementType(this.getMovementType());
-        entity.setSourceType(this.getSourceType());
-        entity.setPurchaseOrderId(this.getPurchaseOrderId());
-        entity.setOrderDetailId(this.getOrderDetailId());
-        entity.setQcId(this.getQcId());
-        entity.setUserId(this.getUserId());
-        entity.setRemark(this.getRemark());
-        // createdAt은 @CreationTimestamp로 DB에서 자동 세팅
-        entity.setIdempotencyKey(this.getIdempotencyKey());
-        entity.setWorkOrderId(this.getWorkOrderId());
+        entity.setMovementId(this.movementId);
+        entity.setOccurredAt(this.occurredAt);
+        entity.setMaterialId(this.materialId);
+        entity.setQty(this.qty);
+        entity.setWarehouseFrom(this.warehouseFrom);
+        entity.setWarehouseTo(this.warehouseTo);
+        entity.setLocationFrom(this.locationFrom);
+        entity.setLocationTo(this.locationTo);
+        entity.setMovementType(this.movementType);
+        entity.setSourceType(this.sourceType);
+        entity.setPurchaseOrderId(this.purchaseOrderId);
+        entity.setOrderDetailId(this.orderDetailId);
+        entity.setQcId(this.qcId);
+        entity.setUserId(this.userId);
+        entity.setRemark(this.remark);
+        entity.setIdempotencyKey(this.idempotencyKey);
+        entity.setWorkOrderId(this.workOrderId);
         return entity;
     }
 

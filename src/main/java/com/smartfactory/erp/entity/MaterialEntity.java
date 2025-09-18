@@ -1,11 +1,11 @@
 package com.smartfactory.erp.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.*;
-
+import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -13,61 +13,77 @@ import java.time.LocalDate;
 public class MaterialEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // AUTO_INCREMENT
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "material_id", nullable = false)
-    private Integer materialId;   // 자재 ID (PK)
+    private Integer materialId;
 
-    @Column(name = "material_nm", length = 50, nullable = false)
-    private String materialNm;    // 자재명
+    @Column(name = "material_nm", nullable = false, length = 50)
+    private String materialNm;
 
     @Column(name = "category", length = 20)
-    private String category;      // 자재분류
+    private String category;
 
-    @Column(name = "contract_date")
-    private LocalDate contractDate;
+    @Column(name = "specification", nullable = false, length = 200)
+    private String specification;
 
-    @Column(name = "specification", length = 200, nullable = false)
-    private String specification; // 규격
+    @Column(name = "unit", nullable = false, length = 20)
+    private String unit;
 
-    @Column(name = "unit", length = 20, nullable = false)
-    private String unit;          // 단위 (EA, KG 등)
-
-    @Column(name = "unit_price", precision = 10, scale = 2, nullable = false)
-    private BigDecimal unitPrice; // 기준단가
+    @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal unitPrice;
 
     @Column(name = "current_price", precision = 10, scale = 2)
-    private BigDecimal currentPrice; // 현재단가
+    private BigDecimal currentPrice;
 
     @Column(name = "min_stock_quantity", nullable = false)
-    private Integer minStockQuantity; // 최소재고
+    private Integer minStockQuantity;
 
     @Column(name = "max_stock_quantity", nullable = false)
-    private Integer maxStockQuantity; // 최대재고
+    private Integer maxStockQuantity;
 
     @Column(name = "current_stock")
-    private Integer currentStock; // 현재고
+    private Integer currentStock;
 
     @Column(name = "lead_time")
-    private Integer leadTime; // 리드타임(일)
+    private Integer leadTime;
 
-    // 공급업체 FK 매핑
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supplier_id", referencedColumnName = "supplier_id")
-    private SupplierEntity supplier; // 공급업체
+    // 🔽 관계의 주인은 SupplierEntity 객체이므로, 이 컬럼은 DB에 값을 쓰지 않도록 설정
+    @Column(name = "supplier_id", insertable = false, updatable = false)
+    private Integer supplierId;
 
     @Column(name = "last_purchase_date")
-    private LocalDate lastPurchaseDate; // 최근구매일
+    private LocalDate lastPurchaseDate;
 
-    @Column(name = "status", columnDefinition = "int default 0")
-    private Integer status; // 0:사용중, 1:단종, 2:대체필요
+    @Column(name = "status")
+    private Integer status;
+
+    @Column(name = "warehouse", nullable = false, length = 20)
+    private String warehouse;
+
+    @Column(name = "location", nullable = false, length = 50)
+    private String location;
 
     @Column(name = "remark", length = 255)
-    private String remark; // 비고
+    private String remark;
 
-    //20250903추가
-    @Column(name = "warehouse", length = 20, nullable = false)
-    private String warehouse; // 창고
+    @Column(name = "created_at", updatable = false, insertable = false,
+            columnDefinition = "datetime default current_timestamp")
+    private LocalDateTime createdAt;
 
-    @Column(name = "location", length = 50, nullable = false)
-    private String location; // 위치
+    @Column(name = "updated_at", insertable = false,
+            columnDefinition = "datetime on update current_timestamp")
+    private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id") // DB의 supplier_id 컬럼과 매핑
+    private SupplierEntity supplier;
+
+    @OneToMany(mappedBy = "material")
+    private List<PurchaseDetailEntity> purchaseOrderDetails;
+
+    @OneToMany(mappedBy = "material")
+    private List<InventoryEntity> inventories;
+
+    @OneToMany(mappedBy = "material")
+    private List<MovementEntity> movements;
 }

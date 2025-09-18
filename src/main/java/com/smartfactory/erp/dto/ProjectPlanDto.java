@@ -10,47 +10,43 @@ import java.time.LocalDateTime;
 
 @Data
 public class ProjectPlanDto {
-    private String planId;          // 계획 ID
-    private String projectId;       // 프로젝트 ID
-    private String vesselId;        // 선박 ID
-    private String planScope;       // 계획 범위
-    private LocalDate startDate;    // 시작일
-    private LocalDate endDate;      // 종료일
-    private BigDecimal progressRate;// 진행률
-    private Integer status;         // 상태
-    private String remark;          // 비고
+    private String planId;
+    private String projectId;
+    private String vesselId;
+    private String planScope;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private BigDecimal progressRate;
+    private Integer status;
+    private String remark;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;  // 생성일
+    private LocalDateTime createdAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;  // 수정일
+    private LocalDateTime updatedAt;
 
-    /**
-     * DTO를 Entity로 변환하는 메서드 (데이터 저장/수정 시 사용)
-     */
     public ProjectPlanEntity toEntity() {
         ProjectPlanEntity entity = new ProjectPlanEntity();
         entity.setPlanId(this.planId);
-        entity.setProjectId(this.projectId);
-        entity.setVesselId(this.vesselId);
         entity.setPlanScope(this.planScope);
         entity.setStartDate(this.startDate);
         entity.setEndDate(this.endDate);
         entity.setProgressRate(this.progressRate);
         entity.setStatus(this.status);
         entity.setRemark(this.remark);
-        entity.setCreatedAt(this.createdAt);
-        entity.setUpdatedAt(this.updatedAt);
         return entity;
     }
 
-    /**
-     * Entity를 DTO로 변환하는 정적 메서드 (데이터 조회 시 사용)
-     */
     public static ProjectPlanDto fromEntity(ProjectPlanEntity entity) {
         ProjectPlanDto dto = new ProjectPlanDto();
         dto.setPlanId(entity.getPlanId());
-        dto.setProjectId(entity.getProjectId());
-        dto.setVesselId(entity.getVesselId());
+
+        if (entity.getProject() != null) {
+            dto.setProjectId(entity.getProject().getProjectId());
+        }
+        if (entity.getVessel() != null) {
+            dto.setVesselId(entity.getVessel().getVesselId());
+        }
+
         dto.setPlanScope(entity.getPlanScope());
         dto.setStartDate(entity.getStartDate());
         dto.setEndDate(entity.getEndDate());

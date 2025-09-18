@@ -22,11 +22,27 @@ public class MovementController {
         movementService.saveMovements(movementDtos);
         return ResponseEntity.noContent().build();
     }
-    //전체 조회
+
     @GetMapping
-    public List<MovementDto> getAll() {
-        return movementService.findAll();
+    public List<MovementDto> getMovements(Integer movementId, Integer materialId) {
+
+        // 4. 두 조건이 모두 있는 경우
+        if (movementId != null && materialId != null) {
+            return movementService.findByMovementIdAndMaterialId(movementId, materialId);
+        }
+        // 2. 이력 ID만 있는 경우
+        else if (movementId != null) {
+            return movementService.findByMovementId(movementId);
+        }
+        // 3. 자재 ID만 있는 경우
+        else if (materialId != null) {
+            return movementService.findByMaterialId(materialId);
+        }
+        // 1. 아무 조건도 없는 경우
+        else {
+            return movementService.findAll();
+        }
     }
-
-
 }
+
+

@@ -10,51 +10,46 @@ import java.util.List;
 @Repository
 public interface ProjectRepository extends JpaRepository<ProjectEntity, String> {
 
-    // 1. 프로젝트명으로만 검색 (Containing: 부분 일치)
+    // 1개 조건 (5개)
+    List<ProjectEntity> findByProjectId(String projectId);
     List<ProjectEntity> findByProjectNmContaining(String projectNm);
+    List<ProjectEntity> findByCustomer_CustomerId(String customerId);
+    List<ProjectEntity> findByStartDate(LocalDate startDate);
+    List<ProjectEntity> findByDeliveryDate(LocalDate deliveryDate);
 
-    // 2. 고객 ID로만 검색
-    List<ProjectEntity> findByCustomerId(String customerId);
-
-    // 3. 기간으로만 검색
-    List<ProjectEntity> findByStartDateBetween(LocalDate startDate, LocalDate deliveryDate);
-
-    // ## 조건이 2개인 경우 (6가지)
-
-    // 4. 프로젝트 ID + 프로젝트명
+    // 2개 조건 (10개)
     List<ProjectEntity> findByProjectIdAndProjectNmContaining(String projectId, String projectNm);
+    List<ProjectEntity> findByProjectIdAndCustomer_CustomerId(String projectId, String customerId);
+    List<ProjectEntity> findByProjectIdAndStartDate(String projectId, LocalDate startDate);
+    List<ProjectEntity> findByProjectIdAndDeliveryDate(String projectId, LocalDate deliveryDate);
+    List<ProjectEntity> findByProjectNmContainingAndCustomer_CustomerId(String projectNm, String customerId);
+    List<ProjectEntity> findByProjectNmContainingAndStartDate(String projectNm, LocalDate startDate);
+    List<ProjectEntity> findByProjectNmContainingAndDeliveryDate(String projectNm, LocalDate deliveryDate);
+    List<ProjectEntity> findByCustomer_CustomerIdAndStartDate(String customerId, LocalDate startDate);
+    List<ProjectEntity> findByCustomer_CustomerIdAndDeliveryDate(String customerId, LocalDate deliveryDate);
+    List<ProjectEntity> findByStartDateAndDeliveryDate(LocalDate startDate, LocalDate deliveryDate);
 
-    // 5. 프로젝트 ID + 고객 ID
-    List<ProjectEntity> findByProjectIdAndCustomerId(String projectId, String customerId);
+    // 3개 조건 (10개)
+    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndCustomer_CustomerId(String projectId, String projectNm, String customerId);
+    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndStartDate(String projectId, String projectNm, LocalDate startDate);
+    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndDeliveryDate(String projectId, String projectNm, LocalDate deliveryDate);
+    List<ProjectEntity> findByProjectIdAndCustomer_CustomerIdAndStartDate(String projectId, String customerId, LocalDate startDate);
+    List<ProjectEntity> findByProjectIdAndCustomer_CustomerIdAndDeliveryDate(String projectId, String customerId, LocalDate deliveryDate);
+    List<ProjectEntity> findByProjectIdAndStartDateAndDeliveryDate(String projectId, LocalDate startDate, LocalDate deliveryDate);
+    List<ProjectEntity> findByProjectNmContainingAndCustomer_CustomerIdAndStartDate(String projectNm, String customerId, LocalDate startDate);
+    List<ProjectEntity> findByProjectNmContainingAndCustomer_CustomerIdAndDeliveryDate(String projectNm, String customerId, LocalDate deliveryDate);
+    List<ProjectEntity> findByProjectNmContainingAndStartDateAndDeliveryDate(String projectNm, LocalDate startDate, LocalDate deliveryDate);
+    List<ProjectEntity> findByCustomer_CustomerIdAndStartDateAndDeliveryDate(String customerId, LocalDate startDate, LocalDate deliveryDate);
 
-    // 6. 프로젝트 ID + 기간
-    List<ProjectEntity> findByProjectIdAndStartDateBetween(String projectId, LocalDate startDate, LocalDate deliveryDate);
+    // 4개 조건 (5개)
+    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndCustomer_CustomerIdAndStartDate(String projectId, String projectNm, String customerId, LocalDate startDate);
+    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndCustomer_CustomerIdAndDeliveryDate(String projectId, String projectNm, String customerId, LocalDate deliveryDate);
+    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndStartDateAndDeliveryDate(String projectId, String projectNm, LocalDate startDate, LocalDate deliveryDate);
+    List<ProjectEntity> findByProjectIdAndCustomer_CustomerIdAndStartDateAndDeliveryDate(String projectId, String customerId, LocalDate startDate, LocalDate deliveryDate);
+    List<ProjectEntity> findByProjectNmContainingAndCustomer_CustomerIdAndStartDateAndDeliveryDate(String projectNm, String customerId, LocalDate startDate, LocalDate deliveryDate);
 
-    // 7. 프로젝트명 + 고객 ID
-    List<ProjectEntity> findByProjectNmContainingAndCustomerId(String projectNm, String customerId);
-
-    // 8. 프로젝트명 + 기간
-    List<ProjectEntity> findByProjectNmContainingAndStartDateBetween(String projectNm, LocalDate startDate, LocalDate deliveryDate);
-
-    // 9. 고객 ID + 기간
-    List<ProjectEntity> findByCustomerIdAndStartDateBetween(String customerId, LocalDate startDate, LocalDate deliveryDate);
-
-    // ## 조건이 3개인 경우 (4가지)
-
-    // 10. 프로젝트 ID + 프로젝트명 + 고객 ID
-    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndCustomerId(String projectId, String projectNm, String customerId);
-
-    // 11. 프로젝트 ID + 프로젝트명 + 기간
-    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndStartDateBetween(String projectId, String projectNm, LocalDate startDate, LocalDate deliveryDate);
-
-    // 12. 프로젝트 ID + 고객 ID + 기간
-    List<ProjectEntity> findByProjectIdAndCustomerIdAndStartDateBetween(String projectId, String customerId, LocalDate startDate, LocalDate deliveryDate);
-
-    // 13. 프로젝트명 + 고객 ID + 기간
-    List<ProjectEntity> findByProjectNmContainingAndCustomerIdAndStartDateBetween(String projectNm, String customerId, LocalDate startDate, LocalDate deliveryDate);
-
-    // 14. 프로젝트ID / 프로젝트명 / 고객ID / 시작일~종료일
-    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndCustomerIdAndStartDateBetween(String projectId, String projectNm, String customerId, LocalDate startDate, LocalDate deliveryDate);
+    // 5개 조건 (1개)
+    List<ProjectEntity> findByProjectIdAndProjectNmContainingAndCustomer_CustomerIdAndStartDateAndDeliveryDate(
+            String projectId, String projectNm, String customerId, LocalDate startDate, LocalDate deliveryDate
+    );
 }
-
-

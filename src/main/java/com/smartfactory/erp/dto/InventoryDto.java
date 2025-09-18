@@ -1,5 +1,6 @@
 package com.smartfactory.erp.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartfactory.erp.entity.InventoryEntity;
 import lombok.Data;
 
@@ -15,9 +16,12 @@ public class InventoryDto {
     private Integer reservedQty;
     private Integer safetyStock;
     private Integer reorderPoint;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     private Integer version;
+    private String remark;
 
     /** DTO -> Entity */
     public InventoryEntity toEntity() {

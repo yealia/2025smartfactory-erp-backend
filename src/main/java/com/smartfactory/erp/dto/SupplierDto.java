@@ -8,21 +8,21 @@ import java.time.LocalDate;
 @Data
 public class SupplierDto {
 
-    private Integer supplierId;      // 공급업체 ID
-    private String supplierNm;       // 업체명
-    private LocalDate contractDate;  // 등록 날짜
-    private String contactPerson;    // 담당자명
-    private String contactPhone;     // 연락처
-    private String contactAddress;   // 주소
-    private String contactEmail;     // 이메일
+    private Integer supplierId;
+    private String supplierName;
+    private LocalDate contractDate;
+    private String contactName;
+    private String contactPhone;
+    private String contactAddress;
+    private String contactEmail;
 
     // DTO -> Entity 변환
     public SupplierEntity toEntity() {
         SupplierEntity entity = new SupplierEntity();
         entity.setSupplierId(this.supplierId);
-        entity.setSupplierNm(this.supplierNm);
+        entity.setSupplierName(this.supplierName);
         entity.setContractDate(this.contractDate);
-        entity.setContactPerson(this.contactPerson);
+        entity.setContactName(this.contactName);
         entity.setContactPhone(this.contactPhone);
         entity.setContactAddress(this.contactAddress);
         entity.setContactEmail(this.contactEmail);
@@ -33,14 +33,12 @@ public class SupplierDto {
     public static SupplierDto fromEntity(SupplierEntity entity) {
         SupplierDto dto = new SupplierDto();
         dto.setSupplierId(entity.getSupplierId());
-        dto.setSupplierNm(entity.getSupplierNm());
+        dto.setSupplierName(entity.getSupplierName());
         dto.setContractDate(entity.getContractDate());
-        dto.setContactPerson(entity.getContactPerson());
+        dto.setContactName(entity.getContactName());
         dto.setContactPhone(entity.getContactPhone());
         dto.setContactAddress(entity.getContactAddress());
         dto.setContactEmail(entity.getContactEmail());
         return dto;
     }
-
-
 }

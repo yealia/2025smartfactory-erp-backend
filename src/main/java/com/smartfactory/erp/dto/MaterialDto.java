@@ -1,5 +1,6 @@
 package com.smartfactory.erp.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartfactory.erp.entity.CustomerEntity;
 import com.smartfactory.erp.entity.MaterialEntity;
 import com.smartfactory.erp.entity.SupplierEntity;
@@ -7,29 +8,34 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**/
 @Data
 public class MaterialDto {
-    private Integer materialId;   // 자재ID
-    private String materialNm;    // 자재명
-    private String category;      // 자재분류
-    private LocalDate contractDate;    //등록일
-    private String specification; // 규격
-    private String unit;          // 단위
-    private BigDecimal unitPrice; // 기준단가
-    private BigDecimal currentPrice; // 현재단가
-    private Integer minStockQuantity; // 최소재고
-    private Integer maxStockQuantity; // 최대재고
-    private Integer currentStock;     // 현재고
-    private Integer leadTime;         // 리드타임(일)
-    private Integer supplierId;       // 공급업체 ID
-    private LocalDate lastPurchaseDate; // 최근구매일
-    private Integer status;           // 상태 (0:사용중, 1:단종, 2:대체필요)
-    private String remark;            // 비고
-    private String warehouse;           //창고 
-    private String location;            //위치
+    private Integer materialId;
+    private String materialNm;
+    private String category;
+    private String specification;
+    private String unit;
+    private BigDecimal unitPrice;
+    private BigDecimal currentPrice;
+    private Integer minStockQuantity;
+    private Integer maxStockQuantity;
+    private Integer currentStock;
+    private Integer leadTime;
+    private Integer supplierId;
+    private LocalDate lastPurchaseDate;
+    private Integer status;
+    private String warehouse;
+    private String location;
+    private String remark;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedAt;
+
 
     //dto -> entity로 변환
     public MaterialEntity toEntity(SupplierEntity supplierEntity){
@@ -37,7 +43,7 @@ public class MaterialDto {
         entity.setMaterialId(this.materialId);
         entity.setMaterialNm(this.materialNm);
         entity.setCategory(this.category);
-        entity.setContractDate(this.contractDate);
+        entity.setSupplierId(this.supplierId);
         entity.setSpecification(this.specification);
         entity.setUnit(this.unit);
         entity.setUnitPrice(this.unitPrice);
@@ -46,7 +52,7 @@ public class MaterialDto {
         entity.setMaxStockQuantity(this.maxStockQuantity);
         entity.setCurrentStock(this.currentStock);
         entity.setLeadTime(this.leadTime);
-        entity.setSupplier(supplierEntity); // FK 매핑
+        entity.setSupplierId(this.supplierId); // FK 매핑
         entity.setLastPurchaseDate(this.lastPurchaseDate);
         entity.setStatus(this.status);
         entity.setRemark(this.remark);
@@ -60,7 +66,6 @@ public class MaterialDto {
         dto.setMaterialId(entity.getMaterialId());
         dto.setMaterialNm(entity.getMaterialNm());
         dto.setCategory(entity.getCategory());
-        dto.setContractDate(entity.getContractDate());
         dto.setSpecification(entity.getSpecification());
         dto.setUnit(entity.getUnit());
         dto.setUnitPrice(entity.getUnitPrice());
@@ -69,14 +74,14 @@ public class MaterialDto {
         dto.setMaxStockQuantity(entity.getMaxStockQuantity());
         dto.setCurrentStock(entity.getCurrentStock());
         dto.setLeadTime(entity.getLeadTime());
-        if (entity.getSupplier() != null) {
-            dto.setSupplierId(entity.getSupplier().getSupplierId());
-        }
+        dto.setSupplierId(entity.getSupplierId());
         dto.setLastPurchaseDate(entity.getLastPurchaseDate());
         dto.setStatus(entity.getStatus());
         dto.setRemark(entity.getRemark());
         dto.setWarehouse(entity.getWarehouse()); //20250903 창고추가
         dto.setLocation(entity.getLocation()); //20250903 위치추가
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
         return dto;
     }
 }

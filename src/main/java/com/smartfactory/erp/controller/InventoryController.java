@@ -17,7 +17,23 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @GetMapping
-    public List<InventoryDto> getInventory(){
-        return inventoryService.findAll();
+    public List<InventoryDto> getInventory(String inventoryId, Integer materialId) {
+
+        // 4. 두 조건이 모두 있는 경우
+        if (inventoryId != null && materialId != null) {
+            return inventoryService.findByInventoryIdAndMaterialId(inventoryId, materialId);
+        }
+        // 2. 재고 ID만 있는 경우
+        else if (inventoryId != null) {
+            return inventoryService.findByInventoryId(inventoryId);
+        }
+        // 3. 자재 ID만 있는 경우
+        else if (materialId != null) {
+            return inventoryService.findByMaterialId(materialId);
+        }
+        // 1. 아무 조건도 없는 경우
+        else {
+            return inventoryService.findAll();
+        }
     }
 }

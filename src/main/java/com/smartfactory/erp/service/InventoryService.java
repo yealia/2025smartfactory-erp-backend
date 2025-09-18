@@ -19,12 +19,13 @@ public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
 
-    public List<InventoryDto> findAll(){
-        return inventoryRepository.findAll()
-                .stream()
-                .map(InventoryDto::fromEntity)
-                .toList();
-    }
+//    public List<InventoryDto> findAll(){
+//        return inventoryRepository.findAll()
+//                .stream()
+//                .map(InventoryDto::fromEntity)
+//                .toList();
+//    }
+
     private String generateInventoryId() {
         String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
         String prefix = "IN" + date;
@@ -90,5 +91,33 @@ public class InventoryService {
             throw new IllegalStateException("재고 수량이 0 미만이 될 수 없습니다.");
         }
         inventoryRepository.save(inv);
+    }
+
+    // 1. 조건이 둘 다 없을 경우 (전체 조회)
+    public List<InventoryDto> findAll() {
+        return inventoryRepository.findAll().stream()
+                .map(InventoryDto::fromEntity)
+                .toList();
+    }
+
+    // 2. 재고 ID만 있을 경우
+    public List<InventoryDto> findByInventoryId(String inventoryId) {
+        return inventoryRepository.findByInventoryIdContaining(inventoryId).stream()
+                .map(InventoryDto::fromEntity)
+                .toList();
+    }
+
+    // 3. 자재 ID만 있을 경우
+    public List<InventoryDto> findByMaterialId(Integer materialId) {
+        return inventoryRepository.findByMaterialId(materialId).stream()
+                .map(InventoryDto::fromEntity)
+                .toList();
+    }
+
+    // 4. 두 조건이 모두 있을 경우
+    public List<InventoryDto> findByInventoryIdAndMaterialId(String inventoryId, Integer materialId) {
+        return inventoryRepository.findByInventoryIdContainingAndMaterialId(inventoryId, materialId).stream()
+                .map(InventoryDto::fromEntity)
+                .toList();
     }
 }

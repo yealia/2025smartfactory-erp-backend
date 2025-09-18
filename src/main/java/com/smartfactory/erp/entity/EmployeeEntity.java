@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -51,4 +52,7 @@ public class EmployeeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "position_id", insertable = false, updatable = false)
     private PositionEntity position;
+
+    @OneToMany(mappedBy = "employee")
+    private List<ProjectEntity> projects;
 }

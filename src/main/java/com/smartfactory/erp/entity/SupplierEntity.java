@@ -2,33 +2,49 @@ package com.smartfactory.erp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
 @Table(name = "suppliers")
 public class SupplierEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // AUTO_INCREMENT 매핑
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "supplier_id", nullable = false)
-    private Integer supplierId;  // 공급업체 ID (PK)
+    private Integer supplierId;
 
-    @Column(name = "supplier_nm", length = 50, nullable = false)
-    private String supplierNm;   // 업체명
+    @Column(name = "supplier_name", nullable = false, length = 50)
+    private String supplierName;
 
-    @Column(name = "contract_date")
-    private LocalDate contractDate; //등록 날짜
-
-    @Column(name = "contact_person", length = 20)
-    private String contactPerson; // 담당자명
+    @Column(name = "contact_name", length = 20)
+    private String contactName;
 
     @Column(name = "contact_phone", length = 20)
-    private String contactPhone;  // 연락처
+    private String contactPhone;
 
     @Column(name = "contact_address", length = 100)
-    private String contactAddress; // 주소
+    private String contactAddress;
 
     @Column(name = "contact_email", length = 50)
-    private String contactEmail;  // 이메일
+    private String contactEmail;
+
+    @Column(name = "contract_date")
+    private LocalDate contractDate;
+
+    @Column(name = "created_at", updatable = false, insertable = false,
+            columnDefinition = "datetime default current_timestamp")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false,
+            columnDefinition = "datetime on update current_timestamp")
+    private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "supplier")
+    private List<MaterialEntity> materials;
+
+    @OneToMany(mappedBy = "supplier")
+    private List<PurchaseOrderEntity> purchaseOrders;
 }

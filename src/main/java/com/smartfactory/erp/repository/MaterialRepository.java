@@ -13,6 +13,6 @@ public interface MaterialRepository extends JpaRepository<MaterialEntity, Intege
 
     //조회
     List<MaterialEntity> findByMaterialNmContaining (String materialNm);
-    List<MaterialEntity> findByContractDate(LocalDate contractDate);
-    List<MaterialEntity> findByMaterialNmContainingAndContractDate(String materialNm, LocalDate contractDate);
+    List<MaterialEntity> findByCategoryContaining(String category);
+    List<MaterialEntity> findByMaterialNmContainingAndCategoryContaining(String materialNm, String category);
 }

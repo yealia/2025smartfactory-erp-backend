@@ -29,8 +29,6 @@ public class DepartmentDto {
         departmentEntity.setManagerId(this.managerId);
         departmentEntity.setLocationId(this.locationId);
         departmentEntity.setLocationNm(this.locationNm);
-        departmentEntity.setCreatedAt(this.createdAt);
-        departmentEntity.setUpdatedAt(this.updatedAt);
         return departmentEntity;
     }
 

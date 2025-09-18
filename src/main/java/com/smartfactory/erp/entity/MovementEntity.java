@@ -2,69 +2,71 @@ package com.smartfactory.erp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "inventory_movements")
+@Table(name = "movements")
 public class MovementEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "movement_id")
-    private Integer movementId; // PK
+    @Column(name = "movement_id", nullable = false)
+    private Integer movementId;
 
-    @CreationTimestamp
-    @Column(name = "occurred_at", nullable = false, columnDefinition = "datetime default current_timestamp")
-    private LocalDateTime occurredAt; // 발생일시
+    @Column(name = "occurred_at", nullable = false)
+    private LocalDateTime occurredAt;
 
-    @Column(name = "material_id", nullable = false)
-    private Integer materialId; // 자재ID (FK to materials.material_id)
+    // 🔽 DB 수정을 하지 않는 조회용 ID 필드
+    @Column(name = "material_id", nullable = false, insertable = false, updatable = false)
+    private Integer materialId;
 
     @Column(name = "qty", nullable = false)
-    private Integer qty; // 수량 (+ 입고, - 반출)
+    private Integer qty;
 
     @Column(name = "warehouse_from", length = 20)
-    private String warehouseFrom; // 출고 창고
+    private String warehouseFrom;
 
     @Column(name = "warehouse_to", length = 20)
-    private String warehouseTo; // 입고 창고
+    private String warehouseTo;
 
     @Column(name = "location_from", length = 50)
-    private String locationFrom; // 출고 위치
+    private String locationFrom;
 
     @Column(name = "location_to", length = 50)
-    private String locationTo; // 입고 위치
+    private String locationTo;
 
-    @Column(name = "movement_type", length = 30, nullable = false)
-    private String movementType; // RECEIPT_QC_PASS, RECEIPT_QC_REJECT, RETURN_TO_SUPPLIER, ...
+    @Column(name = "movement_type", nullable = false, length = 30)
+    private String movementType;
 
-    @Column(name = "source_type", length = 30, nullable = false)
-    private String sourceType; // "QC" 등
+    @Column(name = "source_type", nullable = false, length = 30)
+    private String sourceType;
 
-    @Column(name = "purchase_order_id", length = 50, nullable = false)
+    @Column(name = "purchase_order_id", nullable = false, length = 50)
     private String purchaseOrderId;
 
     @Column(name = "order_detail_id", nullable = false)
     private Integer orderDetailId;
 
     @Column(name = "qc_id", nullable = false)
-    private Long qcId;
+    private Integer qcId;
 
-    @Column(name = "user_id", length = 50, nullable = false)
-    private String userId; // 처리자
+    @Column(name = "user_id", nullable = false, length = 50)
+    private String userId;
 
     @Column(name = "remark", length = 255)
     private String remark;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "datetime default current_timestamp")
-    private LocalDateTime createdAt; // 생성일
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "idempotency_key", length = 100, nullable = false)
-    private String idempotencyKey; // 멱등키(UNIQUE)
+    @Column(name = "idempotency_key", nullable = false, unique = true, length = 100)
+    private String idempotencyKey;
 
     @Column(name = "work_order_id")
-    private Long workOrderId; // 생산지시ID(선택)
+    private Integer workOrderId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "material_id")
+    private MaterialEntity material;
 }

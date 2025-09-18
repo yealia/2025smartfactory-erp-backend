@@ -44,18 +44,17 @@ public class PurchaseOrderEntity {
     @Column(name = "remark", length = 255)
     private String remark;
 
-    @Column(name = "created_at", updatable = false, insertable = false,
-            columnDefinition = "datetime default current_timestamp")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false,
-            columnDefinition = "datetime on update current_timestamp")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // 🔽 관계 매핑: Supplier
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id")
     private SupplierEntity supplier;
 
     @OneToMany(mappedBy = "purchaseOrder")
-    private List<PurchaseDetailEntity> purchaseDetails;
+    private List<PurchaseDetailEntity> purchaseOrderDetails;
 }

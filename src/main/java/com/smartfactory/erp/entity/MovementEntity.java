@@ -17,10 +17,6 @@ public class MovementEntity {
     @Column(name = "occurred_at", nullable = false)
     private LocalDateTime occurredAt;
 
-    // 🔽 DB 수정을 하지 않는 조회용 ID 필드
-    @Column(name = "material_id", nullable = false, insertable = false, updatable = false)
-    private Integer materialId;
-
     @Column(name = "qty", nullable = false)
     private Integer qty;
 
@@ -69,4 +65,10 @@ public class MovementEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "material_id")
     private MaterialEntity material;
+
+    // 🔽 DB 수정을 하지 않는 조회용 ID 필드
+    @Column(name = "material_id", nullable = false, insertable = false, updatable = false)
+    private Integer materialId;
+
+
 }

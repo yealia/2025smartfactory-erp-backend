@@ -35,9 +35,8 @@ public class CustomerController {
 
     // 단건 조회
     @GetMapping("/{customerId}")
-    public CustomerDto getCustomer(@PathVariable("customerId") String customer) {
-        return customerService.getCustomer(customer);
-    }
+    public CustomerDto getCustomer(@PathVariable("customerId") String customerId) {
+        return customerService.getCustomer(customerId);}
 
     //저장
     @PostMapping("")

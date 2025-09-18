@@ -11,19 +11,32 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "boms")
 public class BomEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // auto_increment
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "bom_id")
-    private Integer bomId; // BOM ID (PK)
+    private Integer bomId;
 
     // ============= 관계 매핑 =============
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vessel_id", referencedColumnName = "vessel_id")
-    private VesselEntity vessel; // 선박
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "material_id", referencedColumnName = "material_id")
+    @JoinColumn(name = "vessel_id") // referencedColumnName은 보통 생략 가능합니다.
+    private VesselEntity vessel; // 선박
+
+    // 1. processId를 ProcessEntity와 매핑하도록 수정
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_id")
+    private ProcessEntity process; // 공정
+
+    // 2. 누락된 block_id를 BlockEntity와 매핑하도록 추가
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "block_id")
+    private BlockEntity block; // 블록
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "material_id")
     private MaterialEntity material; // 자재
+
     // ==================================
 
     @Column(name = "required_quantity", nullable = false)
@@ -31,9 +44,6 @@ public class BomEntity {
 
     @Column(name = "unit", nullable = false, length = 20)
     private String unit; // 단위 (EA, KG 등)
-
-    @Column(name = "process_id", length = 20)
-    private String processId; // 공정ID (선택)
 
     @Column(name = "remark", length = 255)
     private String remark; // 비고

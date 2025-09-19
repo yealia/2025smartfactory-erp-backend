@@ -23,7 +23,9 @@ public class DepartmentService {
     /**
      * 🔍 동적 검색 (부서ID, 부서명)
      */
-    public List<DepartmentDto> searchDepartments(Integer departmentId, String departmentNm) {
+    public List<DepartmentDto> searchDepartments(Integer departmentId,
+                                                 String departmentNm,
+                                                 String locationNm) {
         Specification<DepartmentEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -32,6 +34,10 @@ public class DepartmentService {
             }
             if (StringUtils.hasText(departmentNm)) {
                 predicates.add(cb.like(root.get("departmentNm"), "%" + departmentNm + "%"));
+            }
+
+            if (StringUtils.hasText(locationNm)) {
+                predicates.add(cb.like(root.get("locationNm"), "%" + locationNm + "%"));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

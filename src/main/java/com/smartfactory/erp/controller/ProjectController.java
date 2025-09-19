@@ -28,10 +28,12 @@ public class ProjectController {
             @RequestParam(required = false) String projectNm,
             @RequestParam(required = false) String customerId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
+            @RequestParam(defaultValue = "priority") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
     ) {
-        List<ProjectDto> projects = projectService.searchProjects(projectId, projectNm, customerId, startDate, deliveryDate);
-        return ResponseEntity.ok(projects); // HTTP 200 OK 와 함께 데이터 반환
+        List<ProjectDto> projects = projectService.searchProjects(projectId, projectNm, customerId, startDate, deliveryDate, sortBy, sortDir);
+        return ResponseEntity.ok(projects);
     }
 
     /**

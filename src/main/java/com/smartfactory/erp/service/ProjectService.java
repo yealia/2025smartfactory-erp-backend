@@ -10,6 +10,7 @@ import com.smartfactory.erp.repository.ProjectRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,14 +33,19 @@ public class ProjectService {
     /**
      * 여러 검색 조건을 받아 동적으로 프로젝트 목록을 검색합니다.
      */
-    public List<ProjectDto> searchProjects(String projectId, String projectNm, String customerId, LocalDate startDate, LocalDate deliveryDate) {
-        // 1. 검색 조건으로 Specification 객체 생성
+    public List<ProjectDto> searchProjects(
+            String projectId, String projectNm, String customerId,
+            LocalDate startDate, LocalDate deliveryDate,
+            String sortBy, String sortDir // ✨ 1. 정렬을 위한 파라미터 2개 추가
+    ) {
+        // ✨ 2. 정렬 조건 생성
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+
         Specification<ProjectEntity> spec = createSpecification(projectId, projectNm, customerId, startDate, deliveryDate);
 
-        // 2. Specification을 사용하여 데이터 조회
-        List<ProjectEntity> entities = projectRepository.findAll(spec);
+        // ✨ 3. 레파지토리 호출 시 정렬 조건 전달
+        List<ProjectEntity> entities = projectRepository.findAll(spec, sort);
 
-        // 3. 조회된 Entity 목록을 DTO 목록으로 변환하여 반환
         return entities.stream()
                 .map(ProjectDto::fromEntity)
                 .collect(Collectors.toList());

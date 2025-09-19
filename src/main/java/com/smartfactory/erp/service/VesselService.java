@@ -1,42 +1,106 @@
 package com.smartfactory.erp.service;
 
 import com.smartfactory.erp.dto.VesselDto;
+import com.smartfactory.erp.entity.ProjectEntity;
+import com.smartfactory.erp.entity.VesselEntity;
+import com.smartfactory.erp.repository.ProjectRepository;
 import com.smartfactory.erp.repository.VesselRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.criteria.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class VesselService {
 
     private final VesselRepository vesselRepository;
+    private final ProjectRepository projectRepository;
 
-    // 1. 조건이 둘 다 없을 경우
-    public List<VesselDto> findAll() {
-        return vesselRepository.findAll().stream()
+    /**
+     * 동적 검색 (선박ID, 선박명)
+     */
+    public List<VesselDto> searchVessels(String vesselId, String vesselNm) {
+        Specification<VesselEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (StringUtils.hasText(vesselId)) {
+                predicates.add(cb.like(root.get("vesselId"), "%" + vesselId + "%"));
+            }
+
+            if (StringUtils.hasText(vesselNm)) {
+                predicates.add(cb.like(root.get("vesselNm"), "%" + vesselNm + "%"));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return vesselRepository.findAll(spec).stream()
                 .map(VesselDto::fromEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    // 2. 선박명만 있을 경우
-    public List<VesselDto> findByVesselName(String vesselNm) {
-        return vesselRepository.findByVesselNmContaining(vesselNm).stream()
+    /**
+     * 단건 조회
+     */
+    public VesselDto getVesselById(String vesselId) {
+        return vesselRepository.findById(vesselId)
                 .map(VesselDto::fromEntity)
-                .toList();
+                .orElse(null);
     }
 
-    // 3. 선박 ID만 있을 경우
-    public List<VesselDto> findByVesselId(String vesselId) {
-        return vesselRepository.findByVesselIdContaining(vesselId).stream()
-                .map(VesselDto::fromEntity)
-                .toList();
+    /**
+     * 저장 (등록 & 수정)
+     */
+    @Transactional
+    public VesselDto saveVessel(VesselDto vesselDto) {
+        VesselEntity entity = vesselDto.toEntity();
+
+        if (vesselDto.getProjectId() != null) {
+            ProjectEntity project = projectRepository.findById(vesselDto.getProjectId())
+                    .orElseThrow(() -> new IllegalArgumentException("Project with id " + vesselDto.getProjectId() + " not found."));
+            entity.setProject(project);
+        }
+
+        VesselEntity saved = vesselRepository.save(entity);
+        return VesselDto.fromEntity(saved);
     }
 
-    // 4. 두 조건이 모두 있을 경우
-    public List<VesselDto> findByVesselIdAndName(String vesselId, String vesselNm) {
-        return vesselRepository.findByVesselIdContainingAndVesselNmContaining(vesselId, vesselNm).stream()
-                .map(VesselDto::fromEntity)
+    /**
+     * 여러 건 저장
+     */
+    @Transactional
+    public List<VesselDto> saveAllVessels(List<VesselDto> vesselDtos) {
+        List<VesselEntity> entities = vesselDtos.stream()
+                .map(dto -> {
+                    VesselEntity entity = dto.toEntity();
+                    if (dto.getProjectId() != null) {
+                        ProjectEntity project = projectRepository.findById(dto.getProjectId())
+                                .orElseThrow(() -> new IllegalArgumentException("Project with id " + dto.getProjectId() + " not found."));
+                        entity.setProject(project);
+                    }
+                    return entity;
+                })
                 .toList();
+
+        List<VesselEntity> savedEntities = vesselRepository.saveAll(entities);
+        return savedEntities.stream()
+                .map(VesselDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 삭제
+     */
+    @Transactional
+    public void deleteVessel(String vesselId) {
+        vesselRepository.deleteById(vesselId);
     }
 }

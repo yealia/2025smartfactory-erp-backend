@@ -1,219 +1,142 @@
 package com.smartfactory.erp.service;
 
 import com.smartfactory.erp.dto.ProjectDto;
+import com.smartfactory.erp.entity.CustomerEntity;
+import com.smartfactory.erp.entity.EmployeeEntity;
+import com.smartfactory.erp.entity.ProjectEntity;
+import com.smartfactory.erp.repository.CustomerRepository;
+import com.smartfactory.erp.repository.EmployeeRepository;
 import com.smartfactory.erp.repository.ProjectRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final CustomerRepository customerRepository;
+    private final EmployeeRepository employeeRepository;
 
     // =========================
-    // 조건별 검색 메서드
+    // CREATE
     // =========================
+    @Transactional
+    public ProjectDto createProject(ProjectDto dto) {
+        ProjectEntity entity = dto.toEntity();
 
-    // 조건이 없을 때 (전체 조회)
-    public List<ProjectDto> searchAllProjects() {
-        return projectRepository.findAll().stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
+        if (dto.getCustomerId() != null) {
+            CustomerEntity customer = customerRepository.findById(dto.getCustomerId())
+                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+            entity.setCustomer(customer);
+        }
+
+        if (dto.getEmployeeId() != null) {
+            EmployeeEntity employee = employeeRepository.findById(dto.getEmployeeId())
+                    .orElseThrow(() -> new RuntimeException("Employee not found"));
+            entity.setEmployee(employee);
+        }
+
+        ProjectEntity saved = projectRepository.save(entity);
+        return ProjectDto.fromEntity(saved);
     }
 
-    // --- 조건이 1개인 경우 ---
-    public ProjectDto searchByProjectId(String projectId) {
-        return projectRepository.findById(projectId)
-                .map(ProjectDto::fromEntity)
-                .orElse(null);
+    // =========================
+    // READ (단일 조회)
+    // =========================
+    public ProjectDto getProject(String projectId) {
+        ProjectEntity entity = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+        return ProjectDto.fromEntity(entity);
     }
 
-    public List<ProjectDto> searchByProjectNm(String projectNm) {
-        return projectRepository.findByProjectNmContaining(projectNm).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
+    // =========================
+    // UPDATE
+    // =========================
+    @Transactional
+    public ProjectDto updateProject(ProjectDto dto) {
+        ProjectEntity entity = projectRepository.findById(dto.getProjectId())
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        entity.setProjectNm(dto.getProjectNm());
+        entity.setStartDate(dto.getStartDate());
+        entity.setDeliveryDate(dto.getDeliveryDate());
+        entity.setActualDeliveryDate(dto.getActualDeliveryDate());
+        entity.setTotalBudget(dto.getTotalBudget());
+        entity.setExecutionBudget(dto.getExecutionBudget());
+        entity.setCurrencyCode(dto.getCurrencyCode());
+        entity.setProgressRate(dto.getProgressRate());
+        entity.setPriority(dto.getPriority());
+        entity.setRemark(dto.getRemark());
+
+        if (dto.getCustomerId() != null) {
+            CustomerEntity customer = customerRepository.findById(dto.getCustomerId())
+                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+            entity.setCustomer(customer);
+        }
+
+        if (dto.getEmployeeId() != null) {
+            EmployeeEntity employee = employeeRepository.findById(dto.getEmployeeId())
+                    .orElseThrow(() -> new RuntimeException("Employee not found"));
+            entity.setEmployee(employee);
+        }
+
+        ProjectEntity updated = projectRepository.save(entity);
+        return ProjectDto.fromEntity(updated);
     }
 
-    public List<ProjectDto> searchByCustomerId(String customerId) {
-        return projectRepository.findByCustomer_CustomerId(customerId).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
+    // =========================
+    // DELETE
+    // =========================
+    @Transactional
+    public void deleteProject(String projectId) {
+        if (!projectRepository.existsById(projectId)) {
+            throw new RuntimeException("Project not found");
+        }
+        projectRepository.deleteById(projectId);
     }
 
-    public List<ProjectDto> searchByStartDate(LocalDate startDate) {
-        return projectRepository.findByStartDate(startDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
+    // =========================
+    // DYNAMIC SEARCH (DTO 반환)
+    // =========================
+    public List<ProjectDto> searchProjects(String projectId, String projectNm, String customerId,
+                                           LocalDate startDate, LocalDate deliveryDate) {
 
-    public List<ProjectDto> searchByDeliveryDate(LocalDate deliveryDate) {
-        return projectRepository.findByDeliveryDate(deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
+        Specification<ProjectEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-    // --- 조건이 2개인 경우 ---
-    public List<ProjectDto> searchByProjectIdAndProjectNm(String projectId, String projectNm) {
-        return projectRepository.findByProjectIdAndProjectNmContaining(projectId, projectNm).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
+            if (projectId != null && !projectId.isEmpty()) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
 
-    public List<ProjectDto> searchByProjectIdAndCustomerId(String projectId, String customerId) {
-        return projectRepository.findByProjectIdAndCustomer_CustomerId(projectId, customerId).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
+            if (projectNm != null && !projectNm.isEmpty()) {
+                predicates.add(cb.like(root.get("projectNm"), "%" + projectNm + "%"));
+            }
 
-    public List<ProjectDto> searchByProjectIdAndStartDate(String projectId, LocalDate startDate) {
-        return projectRepository.findByProjectIdAndStartDate(projectId, startDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
+            if (customerId != null && !customerId.isEmpty()) {
+                predicates.add(cb.equal(root.get("customer").get("customerId"), customerId));
+            }
 
-    public List<ProjectDto> searchByProjectIdAndDeliveryDate(String projectId, LocalDate deliveryDate) {
-        return projectRepository.findByProjectIdAndDeliveryDate(projectId, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
+            if (startDate != null) {
+                predicates.add(cb.equal(root.get("startDate"), startDate));
+            }
 
-    public List<ProjectDto> searchByProjectNmAndCustomerId(String projectNm, String customerId) {
-        return projectRepository.findByProjectNmContainingAndCustomer_CustomerId(projectNm, customerId).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
+            if (deliveryDate != null) {
+                predicates.add(cb.equal(root.get("deliveryDate"), deliveryDate));
+            }
 
-    public List<ProjectDto> searchByProjectNmAndStartDate(String projectNm, LocalDate startDate) {
-        return projectRepository.findByProjectNmContainingAndStartDate(projectNm, startDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
 
-    public List<ProjectDto> searchByProjectNmAndDeliveryDate(String projectNm, LocalDate deliveryDate) {
-        return projectRepository.findByProjectNmContainingAndDeliveryDate(projectNm, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByCustomerIdAndStartDate(String customerId, LocalDate startDate) {
-        return projectRepository.findByCustomer_CustomerIdAndStartDate(customerId, startDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByCustomerIdAndDeliveryDate(String customerId, LocalDate deliveryDate) {
-        return projectRepository.findByCustomer_CustomerIdAndDeliveryDate(customerId, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByStartDateAndDeliveryDate(LocalDate startDate, LocalDate deliveryDate) {
-        return projectRepository.findByStartDateAndDeliveryDate(startDate, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    // --- 조건이 3개인 경우 ---
-    public List<ProjectDto> searchByProjectIdAndProjectNmAndCustomerId(String projectId, String projectNm, String customerId) {
-        return projectRepository.findByProjectIdAndProjectNmContainingAndCustomer_CustomerId(projectId, projectNm, customerId).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectIdAndProjectNmAndStartDate(String projectId, String projectNm, LocalDate startDate) {
-        return projectRepository.findByProjectIdAndProjectNmContainingAndStartDate(projectId, projectNm, startDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectIdAndProjectNmAndDeliveryDate(String projectId, String projectNm, LocalDate deliveryDate) {
-        return projectRepository.findByProjectIdAndProjectNmContainingAndDeliveryDate(projectId, projectNm, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectIdAndCustomerIdAndStartDate(String projectId, String customerId, LocalDate startDate) {
-        return projectRepository.findByProjectIdAndCustomer_CustomerIdAndStartDate(projectId, customerId, startDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectIdAndCustomerIdAndDeliveryDate(String projectId, String customerId, LocalDate deliveryDate) {
-        return projectRepository.findByProjectIdAndCustomer_CustomerIdAndDeliveryDate(projectId, customerId, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectIdAndStartDateAndDeliveryDate(String projectId, LocalDate startDate, LocalDate deliveryDate) {
-        return projectRepository.findByProjectIdAndStartDateAndDeliveryDate(projectId, startDate, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectNmAndCustomerIdAndStartDate(String projectNm, String customerId, LocalDate startDate) {
-        return projectRepository.findByProjectNmContainingAndCustomer_CustomerIdAndStartDate(projectNm, customerId, startDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectNmAndCustomerIdAndDeliveryDate(String projectNm, String customerId, LocalDate deliveryDate) {
-        return projectRepository.findByProjectNmContainingAndCustomer_CustomerIdAndDeliveryDate(projectNm, customerId, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectNmAndStartDateAndDeliveryDate(String projectNm, LocalDate startDate, LocalDate deliveryDate) {
-        return projectRepository.findByProjectNmContainingAndStartDateAndDeliveryDate(projectNm, startDate, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByCustomerIdAndStartDateAndDeliveryDate(String customerId, LocalDate startDate, LocalDate deliveryDate) {
-        return projectRepository.findByCustomer_CustomerIdAndStartDateAndDeliveryDate(customerId, startDate, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    // --- 조건이 4개인 경우 ---
-    public List<ProjectDto> searchByProjectIdAndProjectNmAndCustomerIdAndStartDate(String projectId, String projectNm, String customerId, LocalDate startDate) {
-        return projectRepository.findByProjectIdAndProjectNmContainingAndCustomer_CustomerIdAndStartDate(projectId, projectNm, customerId, startDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectIdAndProjectNmAndCustomerIdAndDeliveryDate(String projectId, String projectNm, String customerId, LocalDate deliveryDate) {
-        return projectRepository.findByProjectIdAndProjectNmContainingAndCustomer_CustomerIdAndDeliveryDate(projectId, projectNm, customerId, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectIdAndProjectNmAndStartDateAndDeliveryDate(String projectId, String projectNm, LocalDate startDate, LocalDate deliveryDate) {
-        return projectRepository.findByProjectIdAndProjectNmContainingAndStartDateAndDeliveryDate(projectId, projectNm, startDate, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectIdAndCustomerIdAndStartDateAndDeliveryDate(String projectId, String customerId, LocalDate startDate, LocalDate deliveryDate) {
-        return projectRepository.findByProjectIdAndCustomer_CustomerIdAndStartDateAndDeliveryDate(projectId, customerId, startDate, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    public List<ProjectDto> searchByProjectNmAndCustomerIdAndStartDateAndDeliveryDate(String projectNm, String customerId, LocalDate startDate, LocalDate deliveryDate) {
-        return projectRepository.findByProjectNmContainingAndCustomer_CustomerIdAndStartDateAndDeliveryDate(projectNm, customerId, startDate, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
-    }
-
-    // --- 조건이 5개인 경우 ---
-    public List<ProjectDto> searchByAllConditions(String projectId, String projectNm, String customerId, LocalDate startDate, LocalDate deliveryDate) {
-        return projectRepository.findByProjectIdAndProjectNmContainingAndCustomer_CustomerIdAndStartDateAndDeliveryDate(projectId, projectNm, customerId, startDate, deliveryDate).stream()
-                .map(ProjectDto::fromEntity)
-                .toList();
+        List<ProjectEntity> list = projectRepository.findAll(spec);
+        return list.stream().map(ProjectDto::fromEntity).collect(Collectors.toList());
     }
 }

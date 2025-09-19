@@ -22,8 +22,9 @@ public class DepartmentController {
     @GetMapping
     public List<DepartmentDto> searchDepartments(
             @RequestParam(required = false) Integer departmentId,
-            @RequestParam(required = false) String departmentNm) {
-        return departmentService.searchDepartments(departmentId, departmentNm);
+            @RequestParam(required = false) String departmentNm,
+            @RequestParam(required = false) String locationNm){
+        return departmentService.searchDepartments(departmentId, departmentNm, locationNm );
     }
 
     /**

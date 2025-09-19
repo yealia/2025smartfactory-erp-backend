@@ -7,12 +7,15 @@ import com.smartfactory.erp.entity.ProjectEntity;
 import com.smartfactory.erp.repository.CustomerRepository;
 import com.smartfactory.erp.repository.EmployeeRepository;
 import com.smartfactory.erp.repository.ProjectRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
-import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,123 +23,136 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
-    private final CustomerRepository customerRepository;
-    private final EmployeeRepository employeeRepository;
+    private final CustomerRepository customerRepository; // 고객 정보 조회를 위해 주입
+    private final EmployeeRepository employeeRepository; // 담당자 정보 조회를 위해 주입
 
-    // =========================
-    // CREATE
-    // =========================
-    @Transactional
-    public ProjectDto createProject(ProjectDto dto) {
-        ProjectEntity entity = dto.toEntity();
+    /**
+     * 여러 검색 조건을 받아 동적으로 프로젝트 목록을 검색합니다.
+     */
+    public List<ProjectDto> searchProjects(
+            String projectId, String projectNm, String customerId,
+            LocalDate startDate, LocalDate deliveryDate,
+            String sortBy, String sortDir // ✨ 1. 정렬을 위한 파라미터 2개 추가
+    ) {
+        // ✨ 2. 정렬 조건 생성
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
 
-        if (dto.getCustomerId() != null) {
-            CustomerEntity customer = customerRepository.findById(dto.getCustomerId())
-                    .orElseThrow(() -> new RuntimeException("Customer not found"));
-            entity.setCustomer(customer);
-        }
+        Specification<ProjectEntity> spec = createSpecification(projectId, projectNm, customerId, startDate, deliveryDate);
 
-        if (dto.getEmployeeId() != null) {
-            EmployeeEntity employee = employeeRepository.findById(dto.getEmployeeId())
-                    .orElseThrow(() -> new RuntimeException("Employee not found"));
-            entity.setEmployee(employee);
-        }
+        // ✨ 3. 레파지토리 호출 시 정렬 조건 전달
+        List<ProjectEntity> entities = projectRepository.findAll(spec, sort);
 
-        ProjectEntity saved = projectRepository.save(entity);
-        return ProjectDto.fromEntity(saved);
+        return entities.stream()
+                .map(ProjectDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    // =========================
-    // READ (단일 조회)
-    // =========================
-    public ProjectDto getProject(String projectId) {
+    /**
+     * ID로 단일 프로젝트를 조회합니다.
+     */
+    public ProjectDto findProjectById(String projectId) {
         ProjectEntity entity = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new EntityNotFoundException("프로젝트를 찾을 수 없습니다. ID: " + projectId));
         return ProjectDto.fromEntity(entity);
     }
 
-    // =========================
-    // UPDATE
-    // =========================
+    /**
+     * 새로운 프로젝트를 생성합니다.
+     */
     @Transactional
-    public ProjectDto updateProject(ProjectDto dto) {
-        ProjectEntity entity = projectRepository.findById(dto.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+    public ProjectDto createProject(ProjectDto projectDto) {
+        // DTO의 toEntity() 메소드로 기본 엔티티 생성
+        ProjectEntity newProject = projectDto.toEntity();
 
-        entity.setProjectNm(dto.getProjectNm());
-        entity.setStartDate(dto.getStartDate());
-        entity.setDeliveryDate(dto.getDeliveryDate());
-        entity.setActualDeliveryDate(dto.getActualDeliveryDate());
-        entity.setTotalBudget(dto.getTotalBudget());
-        entity.setExecutionBudget(dto.getExecutionBudget());
-        entity.setCurrencyCode(dto.getCurrencyCode());
-        entity.setProgressRate(dto.getProgressRate());
-        entity.setPriority(dto.getPriority());
-        entity.setRemark(dto.getRemark());
+        // DTO에 포함된 ID를 사용하여 연관 엔티티(Customer, Employee)를 조회
+        CustomerEntity customer = customerRepository.findById(projectDto.getCustomerId())
+                .orElseThrow(() -> new EntityNotFoundException("고객을 찾을 수 없습니다. ID: " + projectDto.getCustomerId()));
+        EmployeeEntity employee = employeeRepository.findById(projectDto.getEmployeeId())
+                .orElseThrow(() -> new EntityNotFoundException("담당자를 찾을 수 없습니다. ID: " + projectDto.getEmployeeId()));
 
-        if (dto.getCustomerId() != null) {
-            CustomerEntity customer = customerRepository.findById(dto.getCustomerId())
-                    .orElseThrow(() -> new RuntimeException("Customer not found"));
-            entity.setCustomer(customer);
-        }
+        // 조회한 엔티티로 연관관계(FK) 설정
+        newProject.setCustomer(customer);
+        newProject.setEmployee(employee);
 
-        if (dto.getEmployeeId() != null) {
-            EmployeeEntity employee = employeeRepository.findById(dto.getEmployeeId())
-                    .orElseThrow(() -> new RuntimeException("Employee not found"));
-            entity.setEmployee(employee);
-        }
-
-        ProjectEntity updated = projectRepository.save(entity);
-        return ProjectDto.fromEntity(updated);
+        // 레파지토리를 통해 저장 후 DTO로 변환하여 반환
+        ProjectEntity savedProject = projectRepository.save(newProject);
+        return ProjectDto.fromEntity(savedProject);
     }
 
-    // =========================
-    // DELETE
-    // =========================
+    /**
+     * 기존 프로젝트 정보를 수정합니다.
+     */
+    @Transactional
+    public ProjectDto updateProject(String projectId, ProjectDto projectDto) {
+        // 1. DB에서 수정할 기존 엔티티를 조회
+        ProjectEntity existingProject = projectRepository.findById(projectId)
+                .orElseThrow(() -> new EntityNotFoundException("수정할 프로젝트를 찾을 수 없습니다. ID: " + projectId));
+
+        // 2. 연관 엔티티들도 새로 조회
+        CustomerEntity customer = customerRepository.findById(projectDto.getCustomerId())
+                .orElseThrow(() -> new EntityNotFoundException("고객을 찾을 수 없습니다. ID: " + projectDto.getCustomerId()));
+        EmployeeEntity employee = employeeRepository.findById(projectDto.getEmployeeId())
+                .orElseThrow(() -> new EntityNotFoundException("담당자를 찾을 수 없습니다. ID: " + projectDto.getEmployeeId()));
+
+        // 3. DTO의 내용으로 기존 엔티티의 값을 변경
+        existingProject.setProjectNm(projectDto.getProjectNm());
+        existingProject.setStartDate(projectDto.getStartDate());
+        existingProject.setDeliveryDate(projectDto.getDeliveryDate());
+        existingProject.setActualDeliveryDate(projectDto.getActualDeliveryDate());
+        existingProject.setTotalBudget(projectDto.getTotalBudget());
+        existingProject.setExecutionBudget(projectDto.getExecutionBudget());
+        existingProject.setCurrencyCode(projectDto.getCurrencyCode());
+        existingProject.setProgressRate(projectDto.getProgressRate());
+        existingProject.setPriority(projectDto.getPriority());
+        existingProject.setRemark(projectDto.getRemark());
+        existingProject.setCustomer(customer);
+        existingProject.setEmployee(employee);
+
+        // 4. 트랜잭션이 종료될 때 JPA의 'Dirty Checking'에 의해 자동으로 UPDATE 쿼리가 실행됨
+        return ProjectDto.fromEntity(existingProject);
+    }
+
+    /**
+     * ID로 프로젝트를 삭제합니다.
+     */
     @Transactional
     public void deleteProject(String projectId) {
         if (!projectRepository.existsById(projectId)) {
-            throw new RuntimeException("Project not found");
+            throw new EntityNotFoundException("삭제할 프로젝트를 찾을 수 없습니다. ID: " + projectId);
         }
         projectRepository.deleteById(projectId);
     }
 
-    // =========================
-    // DYNAMIC SEARCH (DTO 반환)
-    // =========================
-    public List<ProjectDto> searchProjects(String projectId, String projectNm, String customerId,
-                                           LocalDate startDate, LocalDate deliveryDate) {
-
-        Specification<ProjectEntity> spec = (root, query, cb) -> {
+    /**
+     * 검색 파라미터를 기반으로 Specification (동적 쿼리 조건) 객체를 생성하는 헬퍼 메소드
+     */
+    private Specification<ProjectEntity> createSpecification(String projectId, String projectNm, String customerId, LocalDate startDate, LocalDate deliveryDate) {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (projectId != null && !projectId.isEmpty()) {
-                predicates.add(cb.equal(root.get("projectId"), projectId));
+            if (StringUtils.hasText(projectId)) {
+                predicates.add(criteriaBuilder.like(root.get("projectId"), "%" + projectId + "%"));
             }
-
-            if (projectNm != null && !projectNm.isEmpty()) {
-                predicates.add(cb.like(root.get("projectNm"), "%" + projectNm + "%"));
+            if (StringUtils.hasText(projectNm)) {
+                predicates.add(criteriaBuilder.like(root.get("projectNm"), "%" + projectNm + "%"));
             }
-
-            if (customerId != null && !customerId.isEmpty()) {
-                predicates.add(cb.equal(root.get("customer").get("customerId"), customerId));
+            if (StringUtils.hasText(customerId)) {
+                // ProjectEntity와 연관된 CustomerEntity의 customerId 필드로 검색 (Join 발생)
+                predicates.add(criteriaBuilder.equal(root.get("customer").get("customerId"), customerId));
             }
-
             if (startDate != null) {
-                predicates.add(cb.equal(root.get("startDate"), startDate));
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("startDate"), startDate));
             }
-
             if (deliveryDate != null) {
-                predicates.add(cb.equal(root.get("deliveryDate"), deliveryDate));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("deliveryDate"), deliveryDate));
             }
 
-            return cb.and(predicates.toArray(new Predicate[0]));
+            // 생성된 모든 조건을 AND로 연결하여 반환
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
-
-        List<ProjectEntity> list = projectRepository.findAll(spec);
-        return list.stream().map(ProjectDto::fromEntity).collect(Collectors.toList());
     }
 }

@@ -63,4 +63,7 @@ public class VesselEntity {
 
     @OneToMany(mappedBy = "vessel")
     private List<ProjectPlanEntity> projectPlans;
+
+    @OneToMany(mappedBy = "vessel", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BomEntity> boms;
 }

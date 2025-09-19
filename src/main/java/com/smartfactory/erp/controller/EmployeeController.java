@@ -17,14 +17,13 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     /**
-     * 🔍 동적 검색 (사원명, 부서명)
-     * - /api/employees?employeeNm=홍길동&departmentNm=생산팀
+     * 🔍 동적 검색
      */
     @GetMapping
     public List<EmployeeDto> searchEmployees(
-            @RequestParam(required = false) String employeeNm,
-            @RequestParam(required = false) String departmentNm) {
-        return employeeService.searchEmployees(employeeNm, departmentNm);
+            @RequestParam(required = false) String employeeId,
+            @RequestParam(required = false) String employeeNm) {
+        return employeeService.searchEmployees(employeeId, employeeNm);
     }
 
     /**

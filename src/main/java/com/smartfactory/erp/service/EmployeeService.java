@@ -21,18 +21,20 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
 
     /**
-     * ✅ 동적 검색 (사원명 / 부서명)
+     * ✅ 동적 검색
      */
-    public List<EmployeeDto> searchEmployees(String employeeNm, String departmentNm) {
+    public List<EmployeeDto> searchEmployees(String employeeId, String employeeNm) {
         Specification<EmployeeEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (StringUtils.hasText(employeeNm)) {
-                predicates.add(cb.like(root.get("employeeNm"), "%" + employeeNm + "%"));
+            // 사원 ID 검색 조건 추가
+            if (StringUtils.hasText(employeeId)) {
+                predicates.add(cb.like(root.get("employeeId"), "%" + employeeId + "%"));
             }
 
-            if (StringUtils.hasText(departmentNm)) {
-                predicates.add(cb.like(root.join("department").get("departmentNm"), "%" + departmentNm + "%"));
+            // 사원명 검색 조건 추가
+            if (StringUtils.hasText(employeeNm)) {
+                predicates.add(cb.like(root.get("employeeNm"), "%" + employeeNm + "%"));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

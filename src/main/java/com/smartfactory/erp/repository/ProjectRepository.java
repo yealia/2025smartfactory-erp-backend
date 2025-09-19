@@ -10,8 +10,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface ProjectRepository extends JpaRepository<ProjectEntity, String>,
-                                    JpaSpecificationExecutor<ProjectEntity> {
+public interface ProjectRepository extends JpaRepository<ProjectEntity, String>
+                                    , JpaSpecificationExecutor<ProjectEntity> {
 
 
 }

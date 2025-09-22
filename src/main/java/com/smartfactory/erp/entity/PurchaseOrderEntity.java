@@ -17,17 +17,17 @@ public class PurchaseOrderEntity {
     private String purchaseOrderId;
 
     @Column(name = "order_date", nullable = false)
-    private LocalDate orderDate;
+    private LocalDate orderDate; // 주문일
 
     @Column(name = "delivery_date")
-    private LocalDate deliveryDate;
+    private LocalDate deliveryDate; // 납기일
 
     // 🔽 DB 수정을 하지 않는 조회용 ID 필드
     @Column(name = "supplier_id", insertable = false, updatable = false)
     private Integer supplierId;
 
     @Column(name = "status")
-    private Integer status;
+    private Integer status = 0;  // 0: 작성, 1: 승인, 2: 입고완료
 
     @Column(name = "total_amount", precision = 15, scale = 2)
     private BigDecimal totalAmount;

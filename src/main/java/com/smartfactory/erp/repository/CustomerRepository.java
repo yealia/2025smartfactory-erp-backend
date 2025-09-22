@@ -17,4 +17,3 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, String
     List<CustomerEntity> findByCustomerNmContainingAndContractDate(String customerNm, LocalDate contractDate);
 
 }
-

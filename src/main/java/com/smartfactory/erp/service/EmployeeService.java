@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.criteria.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -27,12 +27,10 @@ public class EmployeeService {
         Specification<EmployeeEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // 사원 ID 검색 조건 추가
             if (StringUtils.hasText(employeeId)) {
                 predicates.add(cb.like(root.get("employeeId"), "%" + employeeId + "%"));
             }
 
-            // 사원명 검색 조건 추가
             if (StringUtils.hasText(employeeNm)) {
                 predicates.add(cb.like(root.get("employeeNm"), "%" + employeeNm + "%"));
             }
@@ -44,6 +42,7 @@ public class EmployeeService {
                 .map(EmployeeDto::fromEntity)
                 .toList();
     }
+
 
     // =========================
     // ✅ CRUD 기능
@@ -76,9 +75,9 @@ public class EmployeeService {
                 .toList();
     }
 
-    // 삭제
     @Transactional
     public void deleteEmployee(String employeeId) {
         employeeRepository.deleteById(employeeId);
     }
+
 }

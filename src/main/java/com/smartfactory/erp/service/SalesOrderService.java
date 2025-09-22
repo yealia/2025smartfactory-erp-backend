@@ -41,4 +41,3 @@ public class SalesOrderService {
                 .toList();
     }
 }
-

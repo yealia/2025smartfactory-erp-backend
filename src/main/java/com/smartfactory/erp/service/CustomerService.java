@@ -91,8 +91,8 @@ public class CustomerService {
         //3. 레파에 보내라
         //4. 디티오로 바꿔라
         List<CustomerEntity> customerEntity = customers.stream()
-                                                        .map(CustomerDto::toEntity)
-                                                        .toList();
+                .map(CustomerDto::toEntity)
+                .toList();
         //레파지토리에 넣어야
         List<CustomerEntity> saveAll = customerRepository.saveAll(customerEntity);
         return saveAll.stream().map(CustomerDto::fromEntity).toList();

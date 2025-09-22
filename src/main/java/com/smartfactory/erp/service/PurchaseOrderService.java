@@ -13,10 +13,13 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.criteria.Predicate;
 
 @Slf4j
 @Service
@@ -38,57 +41,36 @@ public class PurchaseOrderService {
     }
 
     // 조회부
-    @Transactional
-    public List<PurchaseOrderDto> getAllSearch() {
-        return purchaseOrderRepository.findAll()
+    public List<PurchaseOrderDto> searchOrders(String purchaseOrderId,
+                                               Integer supplierId,
+                                               Integer status,
+                                               LocalDate startDate,
+                                               LocalDate endDate) {
+        Specification<PurchaseOrderEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (purchaseOrderId != null && !purchaseOrderId.isEmpty()) {
+                predicates.add(cb.like(root.get("purchaseOrderId"), "%" + purchaseOrderId + "%"));
+            }
+            if (supplierId != null) {
+                predicates.add(cb.equal(root.get("supplierId"), supplierId));
+            }
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (startDate != null && endDate != null) {
+                predicates.add(cb.between(root.get("orderDate"), startDate, endDate));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return purchaseOrderRepository.findAll(spec)
                 .stream()
-                .map(PurchaseOrderDto::fromEntity)
+                .map(PurchaseOrderDto::fromEntity) // DTO 변환 매퍼 필요
                 .toList();
     }
 
-    @Transactional
-    public List<PurchaseOrderDto> getByPurchaseOrderId(String purchaseOrderId) {
-        return purchaseOrderRepository.findByPurchaseOrderIdContaining(purchaseOrderId)
-                .stream()
-                .map(PurchaseOrderDto::fromEntity)
-                .toList();
-    }
-
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public List<PurchaseOrderDto> getBySupplier(Integer supplierId) {
-        return purchaseOrderRepository.findBySupplierId(supplierId)
-                .stream()
-                .map(PurchaseOrderDto::fromEntity)
-                .toList();
-    }
-
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public List<PurchaseOrderDto> getByStatus(Integer status) {
-        return purchaseOrderRepository.findByStatus(status)
-                .stream()
-                .map(PurchaseOrderDto::fromEntity)
-                .toList();
-    }
-
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public List<PurchaseOrderDto> getByDateRange(LocalDate startDate, LocalDate endDate) {
-        return purchaseOrderRepository.findByOrderDateBetween(startDate, endDate)
-                .stream()
-                .map(PurchaseOrderDto::fromEntity)
-                .toList();
-    }
-
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public List<PurchaseOrderDto> getByAllConditions(
-            String purchaseOrderId, Integer supplierId, Integer status,
-            LocalDate startDate, LocalDate endDate
-    ) {
-        return purchaseOrderRepository.findByPurchaseOrderIdContainingAndSupplierIdAndStatusAndOrderDateBetween(
-                        purchaseOrderId, supplierId, status, startDate, endDate)
-                .stream()
-                .map(PurchaseOrderDto::fromEntity)
-                .toList();
-    }
 
     // 발주 상세 조회
     @Transactional(Transactional.TxType.SUPPORTS)

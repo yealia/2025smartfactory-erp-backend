@@ -23,7 +23,7 @@ public class VesselEntity {
     private String vesselType;
 
     @Column(name = "status")
-    private Integer status = 0;
+    private Integer status = 0; //  0: 계획, 1: 진행, 2: 완료
 
     @Column(name = "vessel_length", precision = 6, scale = 2)
     private BigDecimal vesselLength;
@@ -64,6 +64,6 @@ public class VesselEntity {
     @OneToMany(mappedBy = "vessel")
     private List<ProjectPlanEntity> projectPlans;
 
-    @OneToMany(mappedBy = "vessel", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "vessel")
     private List<BomEntity> boms;
 }

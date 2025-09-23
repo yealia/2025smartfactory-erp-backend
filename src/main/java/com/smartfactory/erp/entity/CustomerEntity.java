@@ -27,7 +27,7 @@ public class CustomerEntity {
     private String countryCode;
 
     @Column(name = "status", nullable = false, length = 20)
-    private String status;
+    private String status = "ACTIVE";
 
     @Column(name = "contact_person", length = 20)
     private String contactPerson;

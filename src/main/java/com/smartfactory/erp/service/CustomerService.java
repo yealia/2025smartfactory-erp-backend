@@ -1,104 +1,94 @@
+// CustomerService.java
+
 package com.smartfactory.erp.service;
 
-import com.smartfactory.erp.dto.CustomerDto;
+import com.smartfactory.erp.dto.CustomerDto; // DTO는 아래에 생성합니다.
 import com.smartfactory.erp.entity.CustomerEntity;
 import com.smartfactory.erp.repository.CustomerRepository;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
-/* JPA가 CRUD해줌 커스텀 쿼리가 필요할 경우만 코드 작성
-findAll() → 전체 조회
-findById(ID id) → PK 단건 조회
-save(entity) → 등록/수정 (PK 있으면 update, 없으면 insert)
-saveAll(entities) → 여러 건 등록/수정
-delete(entity) → 엔티티 삭제
-deleteById(ID id) → PK로 삭제
-existsById(ID id) → 존재 여부 확인
-count() → 총 레코드 수 */
-@Slf4j
-@Service //서비스
-@RequiredArgsConstructor // final 필드 생성자 자동 생성 (의존성 주입)
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CustomerService {
 
-    //CustomerRepository통해 DB를 연결해야하니 접근하기 위해 선언
-    private final CustomerRepository customerRepository;//불변
+    private final CustomerRepository customerRepository;
 
-    // 전체 조회
-//    public List<CustomerEntity> getAllCustomers() {
-//        return customerRepository.findAll();
-//    }
+    // =========================
+    // 동적 조건 조회
+    // =========================
+    public List<CustomerDto> searchCustomers(String customerNm, LocalDate contractDate) {
+        // Specification을 사용하여 동적 쿼리 생성
+        Specification<CustomerEntity> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-    //조건둘다 없을 경우
-    public List<CustomerDto> getAllSearch(){
-        return customerRepository.findAll()
-                .stream()
-                .map(CustomerDto::fromEntity)
-                .toList();
-    }
-    //고객명만 있을 때
-    public List<CustomerDto> getAllSearchCustomer(String customerNm){
-        return customerRepository.findByCustomerNmContaining(customerNm)
-                .stream()
-                .map(CustomerDto::fromEntity)
-                .toList();
-    }
-    //날짜만 있을때
-    public List<CustomerDto> getAllSearchContractDate(LocalDate contractDate){
-        System.out.println(contractDate);
-        log.info("parameter = {}",contractDate);
-        return customerRepository.findByContractDate(contractDate)
-                .stream()
-                .map(CustomerDto::fromEntity)
-                .toList();
-    }
-    //조건 둘 다 있을 때
-    public List<CustomerDto> getAllSearchCustomerContractDate(String customerNm, LocalDate contractDate){
-        log.info("Controller 들어옴: customerNm={}, contractDate={}", customerNm, contractDate);
-        return customerRepository.findByCustomerNmContainingAndContractDate(customerNm, contractDate)
-                .stream()
-                .map(CustomerDto::fromEntity)
-                .toList();
+            // 고객명(customerNm) 조건: like 검색
+            if (customerNm != null && !customerNm.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("customerNm"), "%" + customerNm + "%"));
+            }
+
+            // 계약일(contractDate) 조건: 일치 검색
+            if (contractDate != null) {
+                predicates.add(criteriaBuilder.equal(root.get("contractDate"), contractDate));
+            }
+
+            // 모든 조건을 AND로 연결
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        List<CustomerEntity> entities = customerRepository.findAll(spec);
+        return entities.stream()
+                .map(CustomerDto::fromEntity) // Entity -> DTO 변환
+                .collect(Collectors.toList());
     }
 
-    //상세 조회
+    // =========================
+    // 단건 조회 (ID 기준)
+    // =========================
     public CustomerDto getCustomer(String customerId) {
         return customerRepository.findById(customerId)
                 .map(CustomerDto::fromEntity)
-                .orElse(null);
+                .orElseThrow(() -> new IllegalArgumentException("해당 고객을 찾을 수 없습니다: " + customerId));
     }
+
     // =========================
     // 등록 / 수정
     // =========================
     @Transactional
-    public CustomerDto saveCustomer(CustomerDto customer){
-        //1. 디티오 받음
-        //2. 엔티티로 바꿔라
-        //3. 레파에 보내라
-        //4. 디티오로 바꿔라
-        CustomerEntity customerEntity = customerRepository.save(customer.toEntity());
-        return CustomerDto.fromEntity(customerEntity);
+    public CustomerDto saveCustomer(CustomerDto customerDto) {
+        CustomerEntity entity = customerDto.toEntity();
+        CustomerEntity savedEntity = customerRepository.save(entity);
+        return CustomerDto.fromEntity(savedEntity);
     }
-    //여러 건 저장
+
     @Transactional
-    public List<CustomerDto> saveAllCustomers(List<CustomerDto> customers){
-        //1. 디티오 받음
-        //2. 엔티티로 바꿔라
-        //3. 레파에 보내라
-        //4. 디티오로 바꿔라
-        List<CustomerEntity> customerEntity = customers.stream()
+    public List<CustomerDto> saveAllCustomers(List<CustomerDto> customers) {
+        List<CustomerEntity> entities = customers.stream()
                 .map(CustomerDto::toEntity)
-                .toList();
-        //레파지토리에 넣어야
-        List<CustomerEntity> saveAll = customerRepository.saveAll(customerEntity);
-        return saveAll.stream().map(CustomerDto::fromEntity).toList();
+                .collect(Collectors.toList());
+        List<CustomerEntity> savedEntities = customerRepository.saveAll(entities);
+        return savedEntities.stream()
+                .map(CustomerDto::fromEntity)
+                .collect(Collectors.toList());
     }
+
+    // =========================
+    // 삭제
+    // =========================
     @Transactional
     public void deleteCustomer(String customerId) {
+        if (!customerRepository.existsById(customerId)) {
+            throw new IllegalArgumentException("삭제할 고객이 존재하지 않습니다: " + customerId);
+        }
         customerRepository.deleteById(customerId);
     }
 }

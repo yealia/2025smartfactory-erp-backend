@@ -1,109 +1,96 @@
 package com.smartfactory.erp.service;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.smartfactory.erp.dto.MaterialDto;
-import com.smartfactory.erp.entity.MaterialEntity;
+import com.smartfactory.erp.dto.MaterialDto; // DTO는 별도로 생성해야 합니다.
 import com.smartfactory.erp.entity.MaterialEntity;
 import com.smartfactory.erp.entity.SupplierEntity;
 import com.smartfactory.erp.repository.MaterialRepository;
-import com.smartfactory.erp.repository.MaterialRepository;
-import com.smartfactory.erp.repository.SupplierRepository;
-import jakarta.transaction.Transactional;
+import com.smartfactory.erp.repository.SupplierRepository; // 공급업체 조회를 위해 주입
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
-@Service //서비스
-@RequiredArgsConstructor // final 필드 생성자 자동 생성 (의존성 주입)
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MaterialService {
 
-    private final MaterialRepository materialRepository;//불변
-    private final SupplierRepository supplierRepository;//불변
+    private final MaterialRepository materialRepository;
+    private final SupplierRepository supplierRepository; // ✅ 공급업체 관계 설정을 위해 주입
 
-    // 1. 조건이 둘 다 없을 경우 (전체 조회)
-    public List<MaterialDto> findAll() {
-        return materialRepository.findAll()
-                .stream()
-                .map(MaterialDto::fromEntity)
-                .toList();
-    }
+    /**
+     * 자재명(materialNm)과 카테고리(category)를 조건으로 자재 목록을 동적으로 검색합니다.
+     */
+    public List<MaterialDto> searchMaterials(String materialNm, String category) {
+        // Specification을 사용하여 동적 쿼리 생성
+        Specification<MaterialEntity> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-    // 2. 자재명만 있을 경우
-    public List<MaterialDto> findByMaterialName(String materialNm) {
-        return materialRepository.findByMaterialNmContaining(materialNm)
-                .stream()
-                .map(MaterialDto::fromEntity)
-                .toList();
-    }
-
-    // 3. 자재 분류만 있을 경우
-    public List<MaterialDto> findByCategory(String category) {
-        return materialRepository.findByCategoryContaining(category)
-                .stream()
-                .map(MaterialDto::fromEntity)
-                .toList();
-    }
-
-    // 4. 두 조건이 모두 있을 경우
-    public List<MaterialDto> findByNameAndCategory(String materialNm, String category) {
-        log.info("Service called with: materialNm={}, category={}", materialNm, category);
-        return materialRepository.findByMaterialNmContainingAndCategoryContaining(materialNm, category)
-                .stream()
-                .map(MaterialDto::fromEntity)
-                .toList();
-    }
-
-    //상세 조회
-    public MaterialDto getMaterial(Integer materialId) {
-        return materialRepository.findById(materialId)
-                .map(MaterialDto::fromEntity)
-                .orElse(null);
-    }
-    // =========================
-    // 등록 / 수정
-    // =========================
-    @Transactional
-    public MaterialDto saveMaterial(MaterialDto material){
-        //1. 디티오 받음
-        //2. 엔티티로 바꿔라
-        //3. 레파에 보내라
-        //4. 디티오로 바꿔라
-        log.info("POST {} ", material);
-        SupplierEntity supplierEntity = supplierRepository.findById(material.getSupplierId())
-                .orElse(null);
-        MaterialEntity materialEntity = materialRepository.save(material.toEntity(supplierEntity));
-        return MaterialDto.fromEntity(materialEntity);
-    }
-    //여러 건 저장
-    @Transactional
-    public List<MaterialDto> saveAllMaterials(List<MaterialDto> materials){
-        log.info("POST+++++++++++++++++{}", materials);
-        List<MaterialEntity> validationList = new ArrayList<>();
-        for(MaterialDto materialDto : materials) {
-            //공급업체 있는지 확인
-            SupplierEntity supplierEntity = supplierRepository.findById(materialDto.getSupplierId())
-                    .orElse(null);
-
-            if (supplierEntity != null) { //공급업체 있는 경우만
-                MaterialEntity materialEntity = materialDto.toEntity(supplierEntity);
-                validationList.add(materialEntity);
-            } else {
-                log.warn("존재 하지않음", materialDto.getSupplierId());
+            // 자재명 조건 (값이 있을 경우에만 like 검색 추가)
+            if (materialNm != null && !materialNm.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("materialNm"), "%" + materialNm + "%"));
             }
-        }
-            //레파지토리 접근
-        List<MaterialEntity> result = materialRepository.saveAll(validationList);
 
-        return result.stream().map(MaterialDto::fromEntity).toList();
+            // 카테고리 조건 (값이 있을 경우에만 like 검색 추가)
+            if (category != null && !category.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("category"), "%" + category + "%"));
+            }
 
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        List<MaterialEntity> entities = materialRepository.findAll(spec);
+        // Entity 리스트를 DTO 리스트로 변환하여 반환
+        return entities.stream()
+                .map(MaterialDto::fromEntity)
+                .collect(Collectors.toList());
     }
+
+    /**
+     * ID로 특정 자재 정보를 조회합니다.
+     */
+    public MaterialDto getMaterialById(Integer id) {
+        return materialRepository.findById(id)
+                .map(MaterialDto::fromEntity)
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 자재를 찾을 수 없습니다: " + id));
+    }
+
+    /**
+     * 신규 자재를 등록하거나 기존 자재 정보를 수정합니다.
+     */
     @Transactional
-    public void deleteMaterial(Integer materialId) {
-        materialRepository.deleteById(materialId);
+    public MaterialDto saveMaterial(MaterialDto materialDto) {
+        // 1. DTO를 기본 엔티티로 변환
+        MaterialEntity entity = materialDto.toEntity();
+
+        // 2. DTO에 supplierId가 있다면, 실제 SupplierEntity 객체를 DB에서 조회
+        if (materialDto.getSupplierId() != null) {
+            SupplierEntity supplier = supplierRepository.findById(materialDto.getSupplierId())
+                    .orElseThrow(() -> new IllegalArgumentException("해당 ID의 공급업체를 찾을 수 없습니다: " + materialDto.getSupplierId()));
+
+            // 3. 조회한 Supplier 객체를 MaterialEntity에 설정 (✅ JPA 관계 설정의 핵심)
+            entity.setSupplier(supplier);
+        }
+
+        // 4. 저장 후, 다시 DTO로 변환하여 반환
+        MaterialEntity savedEntity = materialRepository.save(entity);
+        return MaterialDto.fromEntity(savedEntity);
+    }
+
+    /**
+     * ID로 특정 자재 정보를 삭제합니다.
+     */
+    @Transactional
+    public void deleteMaterial(Integer id) {
+        if (!materialRepository.existsById(id)) {
+            throw new IllegalArgumentException("삭제할 자재가 존재하지 않습니다: " + id);
+        }
+        materialRepository.deleteById(id);
     }
 }
+

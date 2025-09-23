@@ -1,17 +1,25 @@
 package com.smartfactory.erp.repository;
 
 import com.smartfactory.erp.entity.InventoryEntity;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
-public interface InventoryRepository extends JpaRepository<InventoryEntity, String> {
-    // 재고 id 큰거 확인
-    Optional<InventoryEntity> findByMaterialIdAndWarehouseAndLocation(Integer materialId, String warehouse, String location);
+@Repository
+public interface InventoryRepository extends JpaRepository<InventoryEntity, String>, JpaSpecificationExecutor<InventoryEntity> {
+
+    /**
+     * ✅ [수정] 비관적 쓰기 잠금을 적용하여 ID 조회 시 동시성 문제를 해결합니다.
+     * 이 메소드가 실행되는 동안 다른 트랜잭션은 이 쿼리가 조회하는 데이터에 접근할 수 없습니다.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<InventoryEntity> findTopByInventoryIdStartingWithOrderByInventoryIdDesc(String prefix);
 
-    List<InventoryEntity> findByInventoryIdContaining(String inventoryId);
-    List<InventoryEntity> findByMaterialId(Integer materialId);
-    List<InventoryEntity> findByInventoryIdContainingAndMaterialId(String inventoryId, Integer materialId);
+    // 재고 수량 변경 로직에 필요하므로 이 메소드도 유지합니다.
+    Optional<InventoryEntity> findByMaterialIdAndWarehouseAndLocation(Integer materialId, String warehouse, String location);
 }
+

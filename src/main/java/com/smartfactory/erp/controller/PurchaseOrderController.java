@@ -28,7 +28,20 @@ public class PurchaseOrderController {
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate
     ) {
-        return purchaseOrderService.searchOrders(purchaseOrderId, supplierId, status, startDate, endDate);
+        if (purchaseOrderId != null && supplierId != null && status != null && startDate != null && endDate != null) {
+            return purchaseOrderService.getByAllConditions(purchaseOrderId, supplierId, status, startDate, endDate);
+        } else if (purchaseOrderId != null) {
+            return purchaseOrderService.getByPurchaseOrderId(purchaseOrderId);
+        } else if (supplierId != null) {
+            return purchaseOrderService.getBySupplier(supplierId);
+        } else if (status != null) {
+            return purchaseOrderService.getByStatus(status);
+        } else if (startDate != null && endDate != null) {
+            return purchaseOrderService.getByDateRange(startDate, endDate);
+        } else {
+            // 조건 없으면 전체 조회
+            return purchaseOrderService.getAllSearch();
+        }
     }
 
     // 발주 상세 조회 (마스터 선택 시)
@@ -75,7 +88,4 @@ public class PurchaseOrderController {
         purchaseOrderService.requestInspections(purchaseOrderId, inspectionRequests);
         return ResponseEntity.ok().build();
     }
-
-
-
 }

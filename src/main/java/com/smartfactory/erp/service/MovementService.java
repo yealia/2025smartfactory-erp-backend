@@ -3,13 +3,16 @@ package com.smartfactory.erp.service;
 import com.smartfactory.erp.dto.MovementDto;
 import com.smartfactory.erp.entity.MovementEntity;
 import com.smartfactory.erp.repository.MovementRepository;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -17,7 +20,7 @@ import java.util.List;
 public class MovementService {
 
     private final MovementRepository movementRepository;
-    private final InventoryService inventoryService; // ← 여기서 심볼 인식되어야 함
+    private final InventoryService inventoryService;
 
     @Transactional
     public List<MovementDto> saveMovements(List<MovementDto> movementDtos){
@@ -26,7 +29,7 @@ public class MovementService {
         for (MovementDto dto : movementDtos) {
             MovementEntity e = dto.toEntity();
             if (e.getUserId() == null || e.getUserId().isBlank()) {
-                e.setUserId("yelia");
+                e.setUserId("yelia"); // 기본 사용자 ID 설정
             }
             toSave.add(e);
         }
@@ -36,35 +39,34 @@ public class MovementService {
         // 같은 트랜잭션 안에서 재고 반영
         saved.forEach(inventoryService::applyMovement);
 
-        return saved.stream().map(MovementDto::fromEntity).toList();
+        return saved.stream().map(MovementDto::fromEntity).collect(Collectors.toList());
     }
 
-    // 1. 조건이 둘 다 없을 경우 (전체 조회)
-    public List<MovementDto> findAll() {
-        return movementRepository.findAll().stream()
+    /**
+     * 동적 조건으로 재고 이력 조회
+     * @param movementId 이력 ID (선택)
+     * @param materialId 자재 ID (선택)
+     * @return 조회된 재고 이력 DTO 리스트
+     */
+    @Transactional(readOnly = true)
+    public List<MovementDto> searchMovements(Integer movementId, Integer materialId) {
+        // Specification을 사용하여 동적 쿼리 생성
+        Specification<MovementEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (movementId != null) {
+                predicates.add(cb.equal(root.get("movementId"), movementId));
+            }
+            if (materialId != null) {
+                // 연관된 Material 엔티티의 ID로 검색
+                predicates.add(cb.equal(root.get("material").get("materialId"), materialId));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return movementRepository.findAll(spec).stream()
                 .map(MovementDto::fromEntity)
-                .toList();
-    }
-
-    // 2. 이력 ID만 있을 경우
-    public List<MovementDto> findByMovementId(Integer movementId) {
-        // findById는 Optional을 반환하므로, 리스트로 변환하는 처리가 필요
-        return movementRepository.findById(movementId)
-                .map(entity -> List.of(MovementDto.fromEntity(entity)))
-                .orElse(List.of()); // 결과가 없으면 빈 리스트 반환
-    }
-
-    // 3. 자재 ID만 있을 경우
-    public List<MovementDto> findByMaterialId(Integer materialId) {
-        return movementRepository.findByMaterialId(materialId).stream()
-                .map(MovementDto::fromEntity)
-                .toList();
-    }
-
-    // 4. 두 조건이 모두 있을 경우
-    public List<MovementDto> findByMovementIdAndMaterialId(Integer movementId, Integer materialId) {
-        return movementRepository.findByMovementIdAndMaterialId(movementId, materialId).stream()
-                .map(MovementDto::fromEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

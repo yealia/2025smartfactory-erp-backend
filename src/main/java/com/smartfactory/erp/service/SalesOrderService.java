@@ -1,5 +1,6 @@
 package com.smartfactory.erp.service;
 
+import com.smartfactory.erp.dto.SalesOrderDto; // DTO import 추가
 import com.smartfactory.erp.entity.SalesOrderEntity;
 import com.smartfactory.erp.repository.SalesOrderRepository;
 import jakarta.persistence.criteria.Predicate;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors; // Collectors import 추가
 
 @Service
 @RequiredArgsConstructor
@@ -19,9 +21,9 @@ public class SalesOrderService {
     private final SalesOrderRepository salesOrderRepository;
 
     /**
-     * 동적 검색을 통해 판매 주문 목록을 조회합니다.
+     * 동적 검색 (반환 타입을 List<SalesOrderDto>로 변경)
      */
-    public List<SalesOrderEntity> searchSalesOrders(String customerId, String vesselId) {
+    public List<SalesOrderDto> searchSalesOrders(String customerId, String vesselId) {
         Specification<SalesOrderEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (customerId != null && !customerId.trim().isEmpty()) {
@@ -32,48 +34,53 @@ public class SalesOrderService {
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        return salesOrderRepository.findAll(spec);
+        // Entity 리스트를 DTO 리스트로 변환하여 반환
+        return salesOrderRepository.findAll(spec).stream()
+                .map(SalesOrderDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
     /**
-     * ID를 통해 단일 판매 주문을 조회합니다.
+     * ID로 단일 조회 (반환 타입을 SalesOrderDto로 변경)
      */
-    public SalesOrderEntity getSalesOrderById(String id) {
+    public SalesOrderDto getSalesOrderById(String id) {
         return salesOrderRepository.findById(id)
+                .map(SalesOrderDto::fromEntity) // Entity를 DTO로 변환
                 .orElseThrow(() -> new IllegalArgumentException("Sales order not found with ID: " + id));
     }
 
     /**
-     * 신규 판매 주문을 생성합니다.
+     * 신규 생성 (파라미터를 DTO로 받고, DTO로 반환)
      */
     @Transactional
-    public SalesOrderEntity createSalesOrder(SalesOrderEntity salesOrder) {
-        // ID는 클라이언트에서 제공하지 않고 서비스에서 생성하는 경우, 이 곳에서 로직을 구현합니다.
-        // 현재는 DTO가 없으므로 엔티티를 직접 사용합니다.
-        // salesOrder.setOrderId(UUID.randomUUID().toString()); // 예시
-        return salesOrderRepository.save(salesOrder);
+    public SalesOrderDto createSalesOrder(SalesOrderDto salesOrderDto) {
+        SalesOrderEntity salesOrder = salesOrderDto.toEntity();
+        SalesOrderEntity savedEntity = salesOrderRepository.save(salesOrder);
+        return SalesOrderDto.fromEntity(savedEntity); // 저장된 Entity를 DTO로 변환하여 반환
     }
 
     /**
-     * 기존 판매 주문을 수정합니다.
+     * 기존 주문 수정 (파라미터를 DTO로 받고, DTO로 반환)
      */
     @Transactional
-    public SalesOrderEntity updateSalesOrder(String id, SalesOrderEntity updatedSalesOrder) {
+    public SalesOrderDto updateSalesOrder(String id, SalesOrderDto updatedSalesOrderDto) {
         SalesOrderEntity existingSalesOrder = salesOrderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Sales order not found with ID: " + id));
 
-        // 엔티티 필드 업데이트 로직
-        existingSalesOrder.setCustomerId(updatedSalesOrder.getCustomerId());
-        existingSalesOrder.setVesselId(updatedSalesOrder.getVesselId());
-        existingSalesOrder.setOrderDate(updatedSalesOrder.getOrderDate());
-        existingSalesOrder.setStatus(updatedSalesOrder.getStatus());
-        existingSalesOrder.setRemark(updatedSalesOrder.getRemark());
+        // DTO의 정보로 엔티티 필드 업데이트
+        existingSalesOrder.setCustomerId(updatedSalesOrderDto.getCustomerId());
+        existingSalesOrder.setVesselId(updatedSalesOrderDto.getVesselId());
+        existingSalesOrder.setOrderDate(updatedSalesOrderDto.getOrderDate());
+        existingSalesOrder.setStatus(updatedSalesOrderDto.getStatus());
+        existingSalesOrder.setRemark(updatedSalesOrderDto.getRemark());
+        // 필요한 다른 필드들도 여기에 추가...
 
-        return salesOrderRepository.save(existingSalesOrder);
+        SalesOrderEntity updatedEntity = salesOrderRepository.save(existingSalesOrder);
+        return SalesOrderDto.fromEntity(updatedEntity); // 수정된 Entity를 DTO로 변환하여 반환
     }
 
     /**
-     * 판매 주문을 삭제합니다.
+     * 판매 주문 삭제
      */
     @Transactional
     public void deleteSalesOrder(String id) {

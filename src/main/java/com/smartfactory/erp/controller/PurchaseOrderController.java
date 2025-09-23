@@ -1,7 +1,5 @@
 package com.smartfactory.erp.controller;
 
-import com.smartfactory.erp.dto.InspectionRequestDto;
-import com.smartfactory.erp.dto.PurchaseDetailDto;
 import com.smartfactory.erp.dto.PurchaseOrderDto;
 import com.smartfactory.erp.dto.PurchaseOrderWithDetailsDto;
 import com.smartfactory.erp.service.PurchaseOrderService;
@@ -19,63 +17,51 @@ public class PurchaseOrderController {
 
     private final PurchaseOrderService purchaseOrderService;
 
-    // 발주 마스터 조건 조회
+    /**
+     * 🔍 발주 목록 동적 검색
+     * GET /api/purchaseOrders
+     */
     @GetMapping
-    public List<PurchaseOrderDto> getPurchaseOrders(
-            @RequestParam(required = false) String purchaseOrderId,
-            @RequestParam(required = false) Integer supplierId,
-            @RequestParam(required = false) Integer status,
+    public ResponseEntity<List<PurchaseOrderDto>> searchOrders(
+            // @RequestParam을 사용하여 URL 쿼리 파라미터를 받습니다.
+            // required = false는 해당 파라미터가 없어도 오류를 발생시키지 않도록 합니다.
             @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate
+            @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false) String supplierName,
+            @RequestParam(required = false) Integer status
     ) {
-        return purchaseOrderService.searchOrders(purchaseOrderId, supplierId, status, startDate, endDate);
+        // ✅ 서비스 메소드의 시그니처와 동일하게 4개의 파라미터를 전달합니다.
+        List<PurchaseOrderDto> orders = purchaseOrderService.searchPurchaseOrders(startDate, endDate, supplierName, status);
+        return ResponseEntity.ok(orders);
     }
 
-    // 발주 상세 조회 (마스터 선택 시)
-    @GetMapping("/{purchaseOrderId}/details")
-    public List<PurchaseDetailDto> getOrderDetails(@PathVariable String purchaseOrderId) {
-        return purchaseOrderService.getOrderDetails(purchaseOrderId);
+    /**
+     * 📖 발주 단건 상세 조회
+     * GET /api/purchaseOrders/{purchaseOrderId}
+     */
+    @GetMapping("/{purchaseOrderId}")
+    public ResponseEntity<PurchaseOrderWithDetailsDto> getOrderById(@PathVariable String purchaseOrderId) {
+        PurchaseOrderWithDetailsDto order = purchaseOrderService.getPurchaseOrderById(purchaseOrderId);
+        return ResponseEntity.ok(order);
     }
 
-    // 발주 저장 (마스터 + 상세)
+    /**
+     * 💾 발주 저장 (생성/수정)
+     * POST /api/purchaseOrders
+     */
     @PostMapping
-    public PurchaseOrderWithDetailsDto savePurchaseOrder(@RequestBody PurchaseOrderWithDetailsDto purchaseOrderDto) {
-        return purchaseOrderService.savePurchaseOrderWithDetails(purchaseOrderDto);
+    public ResponseEntity<PurchaseOrderWithDetailsDto> saveOrder(@RequestBody PurchaseOrderWithDetailsDto dto) {
+        PurchaseOrderWithDetailsDto savedOrder = purchaseOrderService.savePurchaseOrderWithDetails(dto);
+        return ResponseEntity.ok(savedOrder);
     }
 
-    // 발주 상세 저장
-    @PostMapping("/{purchaseOrderId}/details")
-    public List<PurchaseDetailDto> saveOrderDetails(
-            @PathVariable String purchaseOrderId,
-            @RequestBody List<PurchaseDetailDto> details
-    ) {
-        return purchaseOrderService.saveOrderDetails(purchaseOrderId, details);
-    }
-
-    //마스터 + 상세 한번에 저장
-    @PostMapping("/withDetails")
-    public PurchaseOrderWithDetailsDto savePurchaseOrderWithDetails(
-            @RequestBody PurchaseOrderWithDetailsDto dto
-    ) {
-        return purchaseOrderService.savePurchaseOrderWithDetails(dto);
-    }
-
-    // 발주 삭제
+    /**
+     * 🗑️ 발주 삭제
+     * DELETE /api/purchaseOrders/{purchaseOrderId}
+     */
     @DeleteMapping("/{purchaseOrderId}")
-    public void deletePurchaseOrder(@PathVariable String purchaseOrderId) {
+    public ResponseEntity<Void> deleteOrder(@PathVariable String purchaseOrderId) {
         purchaseOrderService.deletePurchaseOrder(purchaseOrderId);
+        return ResponseEntity.noContent().build();
     }
-
-    @PostMapping("/{purchaseOrderId}/inspectionRequests")
-    public ResponseEntity<Void> requestInspections(
-            @PathVariable String purchaseOrderId,
-            @RequestBody List<InspectionRequestDto> inspectionRequests
-    ) {
-        inspectionRequests.forEach(req -> req.setPurchaseOrderId(purchaseOrderId));
-        purchaseOrderService.requestInspections(purchaseOrderId, inspectionRequests);
-        return ResponseEntity.ok().build();
-    }
-
-
-
 }

@@ -12,53 +12,48 @@ public class PurchaseDetailDto {
     private Integer orderDetailId;
     private String purchaseOrderId;
     private Integer materialId;
+
     private Integer orderQuantity;
     private BigDecimal unitPrice;
     private BigDecimal amount;
     private Integer receivedQuantity;
+    private Integer inspectedQuantity;
+    private Integer inspectionStatus;
     private Integer status;
+    private String remark;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public PurchaseDetailEntity toEntity(PurchaseOrderEntity purchaseOrderEntity) {
+    public PurchaseDetailEntity toEntity() {
         PurchaseDetailEntity entity = new PurchaseDetailEntity();
-        //신규저장이면 pk는 세팅하지않음
-        if(this.orderDetailId != null){
-            entity.setOrderDetailId(this.orderDetailId);
-        }
-        entity.setPurchaseOrder(purchaseOrderEntity);
-        entity.setMaterialId(this.materialId);
+        // ID 및 연관관계 ID를 제외한 필드들을 설정
         entity.setOrderQuantity(this.orderQuantity);
         entity.setUnitPrice(this.unitPrice);
-        //amount
-        if (this.unitPrice != null && this.orderQuantity != null) {
-            entity.setAmount(this.unitPrice.multiply(
-                    java.math.BigDecimal.valueOf(this.orderQuantity)
-            ));
-        } else {
-            entity.setAmount(this.amount); // 이미 계산된 값이 넘어온다면
-        }
+        entity.setAmount(this.amount);
         entity.setReceivedQuantity(this.receivedQuantity);
+        entity.setInspectedQuantity(this.inspectedQuantity);
+        entity.setInspectionStatus(this.inspectionStatus);
         entity.setStatus(this.status);
-        //default
-        //entity.setCreatedAt(this.createdAt);
-        //entity.setUpdatedAt(this.updatedAt);
+        entity.setRemark(this.remark);
         return entity;
     }
+
     public static PurchaseDetailDto fromEntity(PurchaseDetailEntity entity) {
         PurchaseDetailDto dto = new PurchaseDetailDto();
         dto.setOrderDetailId(entity.getOrderDetailId());
-        //dto.setPurchaseOrderId(entity.getPurchaseOrderId());
-        dto.setPurchaseOrderId(entity.getPurchaseOrder().getPurchaseOrderId());
+        dto.setPurchaseOrderId(entity.getPurchaseOrderId());
         dto.setMaterialId(entity.getMaterialId());
+
         dto.setOrderQuantity(entity.getOrderQuantity());
         dto.setUnitPrice(entity.getUnitPrice());
         dto.setAmount(entity.getAmount());
         dto.setReceivedQuantity(entity.getReceivedQuantity());
+        dto.setInspectedQuantity(entity.getInspectedQuantity());
+        dto.setInspectionStatus(entity.getInspectionStatus());
         dto.setStatus(entity.getStatus());
+        dto.setRemark(entity.getRemark());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         return dto;
     }
-
 }

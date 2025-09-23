@@ -1,166 +1,131 @@
 package com.smartfactory.erp.service;
 
-import com.smartfactory.erp.client.WebhookClient;
-import com.smartfactory.erp.dto.InspectionRequestDto;
-import com.smartfactory.erp.dto.PurchaseDetailDto;
+
 import com.smartfactory.erp.dto.PurchaseOrderDto;
 import com.smartfactory.erp.dto.PurchaseOrderWithDetailsDto;
+import com.smartfactory.erp.entity.MaterialEntity;
 import com.smartfactory.erp.entity.PurchaseDetailEntity;
 import com.smartfactory.erp.entity.PurchaseOrderEntity;
+import com.smartfactory.erp.entity.SupplierEntity;
+import com.smartfactory.erp.repository.MaterialRepository;
 import com.smartfactory.erp.repository.PurchaseDetailRepository;
 import com.smartfactory.erp.repository.PurchaseOrderRepository;
-import jakarta.transaction.Transactional;
+import com.smartfactory.erp.repository.SupplierRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.criteria.Predicate;
+import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PurchaseOrderService {
 
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseDetailRepository purchaseDetailRepository;
-    private final WebhookClient webhookClient;
+    private final SupplierRepository supplierRepository;
+    private final MaterialRepository materialRepository;
 
-    @Value("${partner.server.base-url}")
-    private String mesBaseUrl;
+    /**
+     * 🔍 동적 검색 (발주 날짜 범위, 공급사 ID)
+     * - 발주 목록 조회 시 사용되며, 상세 정보(Details)는 포함하지 않습니다.
+     */
+    public List<PurchaseOrderDto> searchPurchaseOrders(LocalDate startDate, LocalDate endDate, String supplierName, Integer status) {
 
-    @Value("${partner.server.api.inspection}")
-    private String inspectionApi;
+        // 1. 아무 조건도 없는 '빈' Specification으로 시작합니다.
+        Specification<PurchaseOrderEntity> spec = (root, query, cb) -> cb.conjunction();
 
-    private String getInspectionUrl() {
-        return mesBaseUrl + inspectionApi;
-    }
+        // 2. 각 파라미터가 존재할 경우에만, .and()를 사용하여 조건을 추가합니다.
+        if (startDate != null || endDate != null) {
+            spec = spec.and(PurchaseOrderRepository.betweenOrderDate(startDate, endDate));
+        }
+        if (supplierName != null && !supplierName.trim().isEmpty()) {
+            spec = spec.and(PurchaseOrderRepository.containsSupplierName(supplierName));
+        }
+        if (status != null) {
+            spec = spec.and(PurchaseOrderRepository.hasStatus(status));
+        }
 
-    // 조회부
-    public List<PurchaseOrderDto> searchOrders(String purchaseOrderId,
-                                               Integer supplierId,
-                                               Integer status,
-                                               LocalDate startDate,
-                                               LocalDate endDate) {
-        Specification<PurchaseOrderEntity> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (purchaseOrderId != null && !purchaseOrderId.isEmpty()) {
-                predicates.add(cb.like(root.get("purchaseOrderId"), "%" + purchaseOrderId + "%"));
-            }
-            if (supplierId != null) {
-                predicates.add(cb.equal(root.get("supplierId"), supplierId));
-            }
-            if (status != null) {
-                predicates.add(cb.equal(root.get("status"), status));
-            }
-            if (startDate != null && endDate != null) {
-                predicates.add(cb.between(root.get("orderDate"), startDate, endDate));
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        return purchaseOrderRepository.findAll(spec)
-                .stream()
-                .map(PurchaseOrderDto::fromEntity) // DTO 변환 매퍼 필요
+        // 3. 최종적으로 조합된 Specification으로 데이터를 조회합니다.
+        return purchaseOrderRepository.findAll(spec).stream()
+                .map(PurchaseOrderDto::fromEntity)
                 .toList();
     }
 
+    // =========================
+    // ✅ CRUD 기능
+    // =========================
 
-    // 발주 상세 조회
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public List<PurchaseDetailDto> getOrderDetails(String purchaseOrderId) {
-        return purchaseDetailRepository.findByPurchaseOrder_PurchaseOrderId(purchaseOrderId)
-                .stream()
-                .map(PurchaseDetailDto::fromEntity)
-                .toList();
+    /**
+     * 단건 조회 (발주 + 상세 항목 포함)
+     */
+    public PurchaseOrderWithDetailsDto getPurchaseOrderById(String purchaseOrderId) {
+        return purchaseOrderRepository.findById(purchaseOrderId)
+                .map(PurchaseOrderWithDetailsDto::fromEntity)
+                .orElseThrow(() -> new EntityNotFoundException("발주 정보를 찾을 수 없습니다. ID: " + purchaseOrderId));
     }
 
-    // 저장
+    /**
+     * 저장 (등록 & 수정)
+     * - 발주 정보와 상세 항목 리스트를 한번에 처리합니다.
+     */
     @Transactional
-    public PurchaseOrderDto savePurchaseOrder(PurchaseOrderDto dto) {
-        PurchaseOrderEntity saved = purchaseOrderRepository.save(dto.toEntity());
-        return PurchaseOrderDto.fromEntity(saved);
+    public PurchaseOrderWithDetailsDto savePurchaseOrderWithDetails(PurchaseOrderWithDetailsDto dto) {
+        // 1. DTO에서 PurchaseOrder 정보 추출 및 엔티티 변환
+        PurchaseOrderEntity orderEntity = dto.getPurchaseOrder().toEntity();
+
+        // 2. 연관된 Supplier 엔티티를 조회하여 관계 설정
+        SupplierEntity supplier = supplierRepository.findById(dto.getPurchaseOrder().getSupplierId())
+                .orElseThrow(() -> new EntityNotFoundException("공급사 정보를 찾을 수 없습니다. ID: " + dto.getPurchaseOrder().getSupplierId()));
+        orderEntity.setSupplier(supplier);
+
+        // 3. (수정의 경우) 기존 상세 항목들 삭제
+        if (orderEntity.getPurchaseOrderId() != null && purchaseOrderRepository.existsById(orderEntity.getPurchaseOrderId())) {
+            PurchaseOrderEntity existingOrder = purchaseOrderRepository.findById(orderEntity.getPurchaseOrderId()).get();
+            purchaseDetailRepository.deleteAll(existingOrder.getPurchaseOrderDetails());
+        }
+
+        // 4. 새로운 상세 항목 DTO 리스트를 엔티티 리스트로 변환
+        List<PurchaseDetailEntity> detailEntities = dto.getOrderDetails().stream()
+                .map(detailDto -> {
+                    PurchaseDetailEntity detailEntity = detailDto.toEntity();
+                    // 연관된 Material 엔티티 조회
+                    MaterialEntity material = materialRepository.findById(detailDto.getMaterialId())
+                            .orElseThrow(() -> new EntityNotFoundException("자재 정보를 찾을 수 없습니다. ID: " + detailDto.getMaterialId()));
+
+                    // 양방향 연관관계 설정 (PurchaseDetail -> PurchaseOrder, Material)
+                    detailEntity.setPurchaseOrder(orderEntity);
+                    detailEntity.setMaterial(material);
+                    return detailEntity;
+                })
+                .collect(Collectors.toList());
+
+        // 양방향 연관관계 설정 (PurchaseOrder -> PurchaseDetails)
+        orderEntity.setPurchaseOrderDetails(detailEntities);
+
+        // 5. 엔티티 저장 (Cascade 설정에 따라 details도 함께 저장됨)
+        PurchaseOrderEntity savedEntity = purchaseOrderRepository.save(orderEntity);
+
+        // 6. 저장된 엔티티를 다시 DTO로 변환하여 반환
+        return PurchaseOrderWithDetailsDto.fromEntity(savedEntity);
     }
 
-    @Transactional
-    public List<PurchaseDetailDto> saveOrderDetails(String purchaseOrderId, List<PurchaseDetailDto> detailDtos) {
-        PurchaseOrderEntity order = purchaseOrderRepository.findById(purchaseOrderId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 발주서 ID: " + purchaseOrderId));
-
-        // 기존 상세 삭제 후 재저장 (업데이트 전략)
-        purchaseDetailRepository.deleteByPurchaseOrder_PurchaseOrderId(purchaseOrderId);
-
-        List<PurchaseDetailEntity> entities = detailDtos.stream()
-                .map(dto -> dto.toEntity(order)) // 연관관계 세팅
-                .toList();
-
-        List<PurchaseDetailEntity> saved = purchaseDetailRepository.saveAll(entities);
-        return saved.stream().map(PurchaseDetailDto::fromEntity).toList();
-    }
-
-    // 마스터 + 상세 한번에 저장
-    @Transactional
-    public PurchaseOrderWithDetailsDto savePurchaseOrderWithDetails(PurchaseOrderWithDetailsDto payload) {
-        // 1) 마스터 저장
-        PurchaseOrderEntity order = purchaseOrderRepository.save(payload.getPurchaseOrder().toEntity());
-
-        // 2) 기존 상세 삭제 후 재저장
-        purchaseDetailRepository.deleteByPurchaseOrder_PurchaseOrderId(order.getPurchaseOrderId());
-
-        List<PurchaseDetailEntity> details = payload.getOrderDetails().stream()
-                .map(d -> d.toEntity(order))
-                .toList();
-
-        List<PurchaseDetailEntity> savedDetails = purchaseDetailRepository.saveAll(details);
-
-        // 3) 결과 조립
-        PurchaseOrderWithDetailsDto result = new PurchaseOrderWithDetailsDto();
-        result.setPurchaseOrder(PurchaseOrderDto.fromEntity(order));
-        result.setOrderDetails(savedDetails.stream().map(PurchaseDetailDto::fromEntity).toList());
-        return result;
-    }
-
-    // 삭제
+    /**
+     * 삭제
+     * - 발주 정보 삭제 시, 연관된 상세 항목들도 함께 삭제됩니다. (CascadeType.ALL 또는 orphanRemoval=true 필요)
+     */
     @Transactional
     public void deletePurchaseOrder(String purchaseOrderId) {
-        // FK 제약 고려: 상세 → 마스터 순으로 삭제
-        purchaseDetailRepository.deleteByPurchaseOrder_PurchaseOrderId(purchaseOrderId);
+        if (!purchaseOrderRepository.existsById(purchaseOrderId)) {
+            throw new EntityNotFoundException("삭제할 발주 정보가 없습니다. ID: " + purchaseOrderId);
+        }
         purchaseOrderRepository.deleteById(purchaseOrderId);
     }
-
-    // MES 연동 (검사 요청)
-    @Transactional
-    public void requestInspections(String purchaseOrderId, List<InspectionRequestDto> inspectionRequests) {
-        String url = getInspectionUrl();
-        log.info("Webhook Target URL = {}", url);
-
-        // 마스터 검증
-        PurchaseOrderEntity order = purchaseOrderRepository.findById(purchaseOrderId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 발주 ID: " + purchaseOrderId));
-
-        // 로그
-//        inspectionRequests.forEach(req -> {
-//            if (req.getDetails() != null) {
-//                req.getDetails().forEach(d ->
-//                        log.info("검사요청 상세: 발주={}, 주문상세ID={}, 자재ID={}",
-//                                req.getPurchaseOrderId(), d.getOrderDetailId(), d.getMaterialId())
-//                );
-//            }
-//        });
-
-        // Webhook 전송 (배열 통째로 보냄)
-        log.info("[ERP→MES] POST {} body={}", url, inspectionRequests);
-        webhookClient.send(url, inspectionRequests);
-
-        // 상태 업데이트
-        order.setStatus(1);
-        purchaseOrderRepository.save(order);
-    }
-
 }

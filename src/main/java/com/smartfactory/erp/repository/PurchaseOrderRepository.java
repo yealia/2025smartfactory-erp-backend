@@ -1,41 +1,40 @@
 package com.smartfactory.erp.repository;
 
 import com.smartfactory.erp.entity.PurchaseOrderEntity;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.util.List;
 
-public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrderEntity, String> {
+@Repository
+public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrderEntity, String>,
+        JpaSpecificationExecutor<PurchaseOrderEntity> {
 
-    // 발주번호로 검색
-    List<PurchaseOrderEntity> findByPurchaseOrderIdContaining(String purchaseOrderId);
+    static Specification<PurchaseOrderEntity> betweenOrderDate(LocalDate startDate, LocalDate endDate) {
+        return (root, query, criteriaBuilder) -> {
+            if (startDate != null && endDate != null) {
+                return criteriaBuilder.between(root.get("orderDate"), startDate, endDate);
+            }
+            if (startDate != null) {
+                return criteriaBuilder.greaterThanOrEqualTo(root.get("orderDate"), startDate);
+            }
+            if (endDate != null) {
+                return criteriaBuilder.lessThanOrEqualTo(root.get("orderDate"), endDate);
+            }
+            return null;
+        };
+    }
 
-    // 공급업체로 검색
-    List<PurchaseOrderEntity> findBySupplierId(Integer supplierId);
+    static Specification<PurchaseOrderEntity> containsSupplierName(String supplierName) {
+        return (root, query, criteriaBuilder) ->
+                !StringUtils.hasText(supplierName) ? null : criteriaBuilder.like(root.get("supplier").get("supplierName"), "%" + supplierName + "%");
+    }
 
-    // 상태로 검색
-    List<PurchaseOrderEntity> findByStatus(Integer status);
-
-    // 날짜 범위로 검색
-    List<PurchaseOrderEntity> findByOrderDateBetween(LocalDate startDate, LocalDate endDate);
-
-    // 발주번호 + 공급업체
-    List<PurchaseOrderEntity> findByPurchaseOrderIdContainingAndSupplierId(String purchaseOrderId, Integer supplierId);
-
-    // 공급업체 + 상태
-    List<PurchaseOrderEntity> findBySupplierIdAndStatus(Integer supplierId, Integer status);
-
-    // 발주번호 + 날짜 범위
-    List<PurchaseOrderEntity> findByPurchaseOrderIdContainingAndOrderDateBetween(
-            String purchaseOrderId, LocalDate startDate, LocalDate endDate);
-
-    // 공급업체 + 날짜 범위
-    List<PurchaseOrderEntity> findBySupplierIdAndOrderDateBetween(
-            Integer supplierId, LocalDate startDate, LocalDate endDate);
-
-    // 발주번호 + 공급업체 + 상태 + 날짜범위 (풀옵션)
-    List<PurchaseOrderEntity> findByPurchaseOrderIdContainingAndSupplierIdAndStatusAndOrderDateBetween(
-            String purchaseOrderId, Integer supplierId, Integer status, LocalDate startDate, LocalDate endDate
-    );
+    static Specification<PurchaseOrderEntity> hasStatus(Integer status) {
+        return (root, query, criteriaBuilder) ->
+                status == null ? null : criteriaBuilder.equal(root.get("status"), status);
+    }
 }

@@ -1,3 +1,4 @@
+
 package com.smartfactory.erp.dto;
 
 import com.smartfactory.erp.entity.PurchaseDetailEntity;
@@ -12,6 +13,7 @@ public class PurchaseDetailDto {
     private Integer orderDetailId;
     private String purchaseOrderId;
     private Integer materialId;
+    private String materialNm;
 
     private Integer orderQuantity;
     private BigDecimal unitPrice;
@@ -41,8 +43,13 @@ public class PurchaseDetailDto {
     public static PurchaseDetailDto fromEntity(PurchaseDetailEntity entity) {
         PurchaseDetailDto dto = new PurchaseDetailDto();
         dto.setOrderDetailId(entity.getOrderDetailId());
-        dto.setPurchaseOrderId(entity.getPurchaseOrderId());
-        dto.setMaterialId(entity.getMaterialId());
+        if (entity.getPurchaseOrder() != null) {
+            dto.setPurchaseOrderId(entity.getPurchaseOrder().getPurchaseOrderId());
+        }
+        if (entity.getMaterial() != null) {
+            dto.setMaterialId(entity.getMaterial().getMaterialId());
+            dto.setMaterialNm(entity.getMaterial().getMaterialNm());
+        }
 
         dto.setOrderQuantity(entity.getOrderQuantity());
         dto.setUnitPrice(entity.getUnitPrice());

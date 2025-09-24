@@ -1,3 +1,5 @@
+
+
 package com.smartfactory.erp.service;
 
 
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 
 import java.time.LocalDate;
@@ -37,23 +40,24 @@ public class PurchaseOrderService {
      * 🔍 동적 검색 (발주 날짜 범위, 공급사 ID)
      * - 발주 목록 조회 시 사용되며, 상세 정보(Details)는 포함하지 않습니다.
      */
-    public List<PurchaseOrderDto> searchPurchaseOrders(LocalDate startDate, LocalDate endDate, String supplierName, Integer status) {
+    public List<PurchaseOrderDto> searchPurchaseOrders(String purchaseOrderId, LocalDate startDate, LocalDate endDate, String supplierName, Integer status) {
 
-        // 1. 아무 조건도 없는 '빈' Specification으로 시작합니다.
-        Specification<PurchaseOrderEntity> spec = (root, query, cb) -> cb.conjunction();
+        Specification<PurchaseOrderEntity> spec = Specification.allOf();
 
-        // 2. 각 파라미터가 존재할 경우에만, .and()를 사용하여 조건을 추가합니다.
+        // ✅ 2. purchaseOrderId 검색 조건이 있을 경우 Specification에 추가
+        if (StringUtils.hasText(purchaseOrderId)) {
+            spec = spec.and(PurchaseOrderRepository.containsPurchaseOrderId(purchaseOrderId));
+        }
         if (startDate != null || endDate != null) {
             spec = spec.and(PurchaseOrderRepository.betweenOrderDate(startDate, endDate));
         }
-        if (supplierName != null && !supplierName.trim().isEmpty()) {
+        if (StringUtils.hasText(supplierName)) {
             spec = spec.and(PurchaseOrderRepository.containsSupplierName(supplierName));
         }
         if (status != null) {
             spec = spec.and(PurchaseOrderRepository.hasStatus(status));
         }
 
-        // 3. 최종적으로 조합된 Specification으로 데이터를 조회합니다.
         return purchaseOrderRepository.findAll(spec).stream()
                 .map(PurchaseOrderDto::fromEntity)
                 .toList();

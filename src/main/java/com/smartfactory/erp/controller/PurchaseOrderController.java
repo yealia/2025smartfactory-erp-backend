@@ -1,3 +1,4 @@
+
 package com.smartfactory.erp.controller;
 
 import com.smartfactory.erp.dto.PurchaseOrderDto;
@@ -23,15 +24,15 @@ public class PurchaseOrderController {
      */
     @GetMapping
     public ResponseEntity<List<PurchaseOrderDto>> searchOrders(
-            // @RequestParam을 사용하여 URL 쿼리 파라미터를 받습니다.
-            // required = false는 해당 파라미터가 없어도 오류를 발생시키지 않도록 합니다.
+            // ✅ 1. 'purchaseOrderId' 파라미터를 받도록 @RequestParam 추가
+            @RequestParam(required = false) String purchaseOrderId,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate,
             @RequestParam(required = false) String supplierName,
             @RequestParam(required = false) Integer status
     ) {
-        // ✅ 서비스 메소드의 시그니처와 동일하게 4개의 파라미터를 전달합니다.
-        List<PurchaseOrderDto> orders = purchaseOrderService.searchPurchaseOrders(startDate, endDate, supplierName, status);
+        // ✅ 2. 서비스 메소드 호출 시 'purchaseOrderId'를 첫 번째 인자로 전달
+        List<PurchaseOrderDto> orders = purchaseOrderService.searchPurchaseOrders(purchaseOrderId, startDate, endDate, supplierName, status);
         return ResponseEntity.ok(orders);
     }
 
@@ -65,3 +66,4 @@ public class PurchaseOrderController {
         return ResponseEntity.noContent().build();
     }
 }
+

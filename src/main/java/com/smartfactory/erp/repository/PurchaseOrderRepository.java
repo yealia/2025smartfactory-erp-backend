@@ -1,3 +1,4 @@
+
 package com.smartfactory.erp.repository;
 
 import com.smartfactory.erp.entity.PurchaseOrderEntity;
@@ -12,6 +13,12 @@ import java.time.LocalDate;
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrderEntity, String>,
         JpaSpecificationExecutor<PurchaseOrderEntity> {
+
+    static Specification<PurchaseOrderEntity> containsPurchaseOrderId(String purchaseOrderId) {
+        return (root, query, criteriaBuilder) ->
+                !StringUtils.hasText(purchaseOrderId) ? null : criteriaBuilder.like(root.get("purchaseOrderId"), "%" + purchaseOrderId + "%");
+    }
+
 
     static Specification<PurchaseOrderEntity> betweenOrderDate(LocalDate startDate, LocalDate endDate) {
         return (root, query, criteriaBuilder) -> {

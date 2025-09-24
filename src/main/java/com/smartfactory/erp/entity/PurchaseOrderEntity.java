@@ -27,7 +27,7 @@ public class PurchaseOrderEntity {
     private Integer supplierId;
 
     @Column(name = "status")
-    private Integer status = 0;  // 0: 작성, 1: 승인, 2: 입고완료
+    private Integer status = 0;  // 0: 대기, 1: 승인, 2: 취소 - 공급업체 기준
 
     @Column(name = "total_amount", precision = 15, scale = 2)
     private BigDecimal totalAmount;
@@ -55,6 +55,6 @@ public class PurchaseOrderEntity {
     @JoinColumn(name = "supplier_id")
     private SupplierEntity supplier;
 
-    @OneToMany(mappedBy = "purchaseOrder")
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurchaseDetailEntity> purchaseOrderDetails;
 }

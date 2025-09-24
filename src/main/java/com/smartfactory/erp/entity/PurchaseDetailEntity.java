@@ -1,3 +1,4 @@
+
 package com.smartfactory.erp.entity;
 
 import jakarta.persistence.*;
@@ -14,14 +15,6 @@ public class PurchaseDetailEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_detail_id", nullable = false)
     private Integer orderDetailId;
-
-    // 🔽 관계의 주인은 PurchaseOrderEntity 객체이므로, 이 컬럼은 DB에 값을 쓰지 않도록 설정
-    @Column(name = "purchase_order_id", nullable = false, length = 20, insertable = false, updatable = false)
-    private String purchaseOrderId;
-
-    // 🔽 관계의 주인은 MaterialEntity 객체이므로, 이 컬럼은 DB에 값을 쓰지 않도록 설정
-    @Column(name = "material_id", nullable = false, insertable = false, updatable = false)
-    private Integer materialId;
 
     @Column(name = "order_quantity", nullable = false)
     private Integer orderQuantity;

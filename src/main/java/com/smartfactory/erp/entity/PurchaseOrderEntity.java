@@ -27,7 +27,7 @@ public class PurchaseOrderEntity {
     private Integer supplierId;
 
     @Column(name = "status")
-    private Integer status = 0;  // 0: 작성, 1: 승인, 2: 입고완료
+    private Integer status = 0;  // 0: 작성, 1: 승인, 2: 취소
 
     @Column(name = "total_amount", precision = 15, scale = 2)
     private BigDecimal totalAmount;

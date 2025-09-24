@@ -26,7 +26,7 @@ public class SalesOrderEntity {
     private String currencyCode;
 
     @Column(name = "status")
-    private Integer status;
+    private Integer status;  // 0: 등록, 1: 판매 요청, 2: 완료
 
     @Column(name = "total_amount", precision = 15, scale = 2)
     private BigDecimal totalAmount;

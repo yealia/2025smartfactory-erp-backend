@@ -5,6 +5,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -66,4 +67,8 @@ public class VesselEntity {
 
     @OneToMany(mappedBy = "vessel")
     private List<BomEntity> boms;
+
+    @OneToMany(mappedBy = "vessel")
+    private List<SalesOrderEntity> salesOrders = new ArrayList<>();
+
 }

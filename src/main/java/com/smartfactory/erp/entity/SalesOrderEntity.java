@@ -19,12 +19,6 @@ public class SalesOrderEntity {
     @Column(name = "order_date", nullable = false)
     private LocalDate orderDate;
 
-    @Column(name = "customer_id",length = 20, nullable = false)
-    private String customerId;
-
-    @Column(name = "vessel_id",length = 20, nullable = false)
-    private String vesselId;
-
     @Column(name = "customer_po_no", length = 30)
     private String customerPoNo;
 
@@ -56,4 +50,12 @@ public class SalesOrderEntity {
     @Column(name = "updated_at", insertable = false,
             columnDefinition = "datetime on update current_timestamp")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private CustomerEntity customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vessel_id", nullable = false)
+    private VesselEntity vessel;
 }

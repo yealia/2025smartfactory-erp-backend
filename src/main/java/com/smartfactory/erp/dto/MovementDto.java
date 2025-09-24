@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class MovementDto {
     private Integer movementId;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime occurredAt;
     private Integer materialId;
     private Integer qty;

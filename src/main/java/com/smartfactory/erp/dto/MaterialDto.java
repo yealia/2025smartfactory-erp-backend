@@ -1,17 +1,13 @@
 package com.smartfactory.erp.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.smartfactory.erp.entity.CustomerEntity;
 import com.smartfactory.erp.entity.MaterialEntity;
-import com.smartfactory.erp.entity.SupplierEntity;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
-/**/
 @Data
 public class MaterialDto {
     private Integer materialId;
@@ -36,14 +32,14 @@ public class MaterialDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
-
-    //dto -> entity로 변환
-    public MaterialEntity toEntity(SupplierEntity supplierEntity){
+    /**
+     * DTO -> Entity 변환 (✅ Supplier 객체 설정은 Service 계층에서 처리하도록 파라미터 제거)
+     */
+    public MaterialEntity toEntity() {
         MaterialEntity entity = new MaterialEntity();
         entity.setMaterialId(this.materialId);
         entity.setMaterialNm(this.materialNm);
         entity.setCategory(this.category);
-        entity.setSupplierId(this.supplierId);
         entity.setSpecification(this.specification);
         entity.setUnit(this.unit);
         entity.setUnitPrice(this.unitPrice);
@@ -52,16 +48,19 @@ public class MaterialDto {
         entity.setMaxStockQuantity(this.maxStockQuantity);
         entity.setCurrentStock(this.currentStock);
         entity.setLeadTime(this.leadTime);
-        entity.setSupplierId(this.supplierId); // FK 매핑
         entity.setLastPurchaseDate(this.lastPurchaseDate);
         entity.setStatus(this.status);
+        entity.setWarehouse(this.warehouse);
+        entity.setLocation(this.location);
         entity.setRemark(this.remark);
-        entity.setWarehouse(this.warehouse); //20250903 창고추가 
-        entity.setLocation(this.location); //20250903 위치추가
+        // supplier 객체 설정은 서비스 레이어에서 담당합니다.
         return entity;
     }
-    //entity -> dto
-    public static MaterialDto fromEntity(MaterialEntity entity){
+
+    /**
+     * Entity -> DTO 변환 (✅ Supplier 객체가 null일 경우를 대비한 안전한 로직으로 수정)
+     */
+    public static MaterialDto fromEntity(MaterialEntity entity) {
         MaterialDto dto = new MaterialDto();
         dto.setMaterialId(entity.getMaterialId());
         dto.setMaterialNm(entity.getMaterialNm());
@@ -74,14 +73,18 @@ public class MaterialDto {
         dto.setMaxStockQuantity(entity.getMaxStockQuantity());
         dto.setCurrentStock(entity.getCurrentStock());
         dto.setLeadTime(entity.getLeadTime());
-        dto.setSupplierId(entity.getSupplierId());
+        // 연관된 Supplier 객체가 존재할 경우 그 ID를 가져옵니다.
+        if (entity.getSupplier() != null) {
+            dto.setSupplierId(entity.getSupplier().getSupplierId());
+        }
         dto.setLastPurchaseDate(entity.getLastPurchaseDate());
         dto.setStatus(entity.getStatus());
+        dto.setWarehouse(entity.getWarehouse());
+        dto.setLocation(entity.getLocation());
         dto.setRemark(entity.getRemark());
-        dto.setWarehouse(entity.getWarehouse()); //20250903 창고추가
-        dto.setLocation(entity.getLocation()); //20250903 위치추가
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         return dto;
     }
 }
+

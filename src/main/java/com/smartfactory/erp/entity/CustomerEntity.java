@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -27,7 +29,7 @@ public class CustomerEntity {
     private String countryCode;
 
     @Column(name = "status", nullable = false, length = 20)
-    private String status;
+    private String status = "ACTIVE";
 
     @Column(name = "contact_person", length = 20)
     private String contactPerson;
@@ -51,4 +53,7 @@ public class CustomerEntity {
     @Column(name = "updated_at", insertable = false,
             columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "customer")
+    private List<SalesOrderEntity> salesOrders = new ArrayList<>();
 }

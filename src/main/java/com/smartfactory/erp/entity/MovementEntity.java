@@ -69,6 +69,4 @@ public class MovementEntity {
     // 🔽 DB 수정을 하지 않는 조회용 ID 필드
     @Column(name = "material_id", nullable = false, insertable = false, updatable = false)
     private Integer materialId;
-
-
 }

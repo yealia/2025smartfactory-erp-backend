@@ -2,11 +2,9 @@ package com.smartfactory.erp.repository;
 
 import com.smartfactory.erp.entity.MovementEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
-public interface MovementRepository extends JpaRepository<MovementEntity, Integer> {
-    List<MovementEntity> findByMovementId(Integer movementId);
-    List<MovementEntity> findByMaterialId(Integer materialId);
-    List<MovementEntity> findByMovementIdAndMaterialId(Integer movementId, Integer materialId);
+@Repository
+public interface MovementRepository extends JpaRepository<MovementEntity, Integer>, JpaSpecificationExecutor<MovementEntity> {
 }

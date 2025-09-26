@@ -2,6 +2,8 @@ package com.smartfactory.erp.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartfactory.erp.entity.EmployeeEntity;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -14,8 +16,15 @@ public class EmployeeDto {
     private int departmentId;
     private int positionId;
     private LocalDate hireDate;
+
+    // ✅ [추가] 전화번호 형식 검증 (예: 010-1234-5678)
+    @Pattern(regexp = "^\\d{2,3}-\\d{3,4}-\\d{4}$")
     private String phone;
+
+    // ✅ [추가] 이메일 형식 검증
+    @Email
     private String email;
+
     private String employeeStatus;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;

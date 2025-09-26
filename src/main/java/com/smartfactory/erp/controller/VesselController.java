@@ -3,12 +3,12 @@ package com.smartfactory.erp.controller;
 import com.smartfactory.erp.dto.VesselDto;
 import com.smartfactory.erp.service.VesselService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/vessels")
 @RequiredArgsConstructor
@@ -16,24 +16,55 @@ public class VesselController {
 
     private final VesselService vesselService;
 
+    /**
+     * 🔍 동적 검색 (선박ID, 선박명)
+     */
     @GetMapping
-    public List<VesselDto> getVessels(String vesselId, String vesselNm) {
+    public List<VesselDto> searchVessels(
+            @RequestParam(required = false) String vesselId,
+            @RequestParam(required = false) String vesselNm) {
+        return vesselService.searchVessels(vesselId, vesselNm);
+    }
 
-        // 4. 두 조건이 모두 있는 경우
-        if (vesselId != null && vesselNm != null) {
-            return vesselService.findByVesselIdAndName(vesselId, vesselNm);
-        }
-        // 3. 선박 ID만 있는 경우
-        else if (vesselId != null) {
-            return vesselService.findByVesselId(vesselId);
-        }
-        // 2. 선박명만 있는 경우
-        else if (vesselNm != null) {
-            return vesselService.findByVesselName(vesselNm);
-        }
-        // 1. 아무 조건도 없는 경우
-        else {
-            return vesselService.findAll();
-        }
+    /**
+     * 👀 단건 조회
+     */
+    @GetMapping("/{vesselId}")
+    public VesselDto getVessel(@PathVariable String vesselId) {
+        return vesselService.getVesselById(vesselId);
+    }
+
+    /**
+     * ➕ 단건 저장 (등록 & 수정)
+     */
+    @PostMapping
+    public VesselDto saveVessel(@RequestBody VesselDto vesselDto) {
+        return vesselService.saveVessel(vesselDto);
+    }
+
+    /**
+     * 📦 여러 건 저장
+     */
+    @PostMapping("/saveAll")
+    public List<VesselDto> saveAllVessels(@RequestBody List<VesselDto> vesselDtos) {
+        return vesselService.saveAllVessels(vesselDtos);
+    }
+
+    /**
+     * 📝 수정
+     */
+    @PutMapping("/{vesselId}")
+    public VesselDto updateVessel(@PathVariable String vesselId, @RequestBody VesselDto vesselDto) {
+        vesselDto.setVesselId(vesselId);
+        return vesselService.saveVessel(vesselDto);
+    }
+
+    /**
+     * 🗑️ 삭제
+     */
+    @DeleteMapping("/{vesselId}")
+    public void deleteVessel(@PathVariable String vesselId) {
+        log.info("삭제 요청 ID = {}", vesselId);
+        vesselService.deleteVessel(vesselId);
     }
 }

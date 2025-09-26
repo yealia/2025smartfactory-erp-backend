@@ -55,7 +55,7 @@ public class MaterialEntity {
     private LocalDate lastPurchaseDate;
 
     @Column(name = "status")
-    private Integer status;
+    private Integer status = 0; // 0: 계획, 1: 진행, 2: 완료
 
     @Column(name = "warehouse", nullable = false, length = 20)
     private String warehouse;

@@ -35,7 +35,7 @@ public class InventoryEntity {
     @Column(name = "reorder_point", nullable = false)
     private Integer reorderPoint;
 
-    @Version // 낙관적 락을 위한 Version 필드
+    @Version // 낙관적 락을 위한 Version 필드 (동시 수정으로 인한 덮어쓰기 문제를 방지)
     @Column(name = "version", nullable = false)
     private Integer version;
 

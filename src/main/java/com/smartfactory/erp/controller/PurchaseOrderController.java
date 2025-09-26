@@ -1,7 +1,6 @@
+
 package com.smartfactory.erp.controller;
 
-import com.smartfactory.erp.dto.InspectionRequestDto;
-import com.smartfactory.erp.dto.PurchaseDetailDto;
 import com.smartfactory.erp.dto.PurchaseOrderDto;
 import com.smartfactory.erp.dto.PurchaseOrderWithDetailsDto;
 import com.smartfactory.erp.service.PurchaseOrderService;
@@ -19,76 +18,52 @@ public class PurchaseOrderController {
 
     private final PurchaseOrderService purchaseOrderService;
 
-    // 발주 마스터 조건 조회
+    /**
+     * 🔍 발주 목록 동적 검색
+     * GET /api/purchaseOrders
+     */
     @GetMapping
-    public List<PurchaseOrderDto> getPurchaseOrders(
+    public ResponseEntity<List<PurchaseOrderDto>> searchOrders(
+            // ✅ 1. 'purchaseOrderId' 파라미터를 받도록 @RequestParam 추가
             @RequestParam(required = false) String purchaseOrderId,
-            @RequestParam(required = false) Integer supplierId,
-            @RequestParam(required = false) Integer status,
             @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate
+            @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false) String supplierName,
+            @RequestParam(required = false) Integer status
     ) {
-        if (purchaseOrderId != null && supplierId != null && status != null && startDate != null && endDate != null) {
-            return purchaseOrderService.getByAllConditions(purchaseOrderId, supplierId, status, startDate, endDate);
-        } else if (purchaseOrderId != null) {
-            return purchaseOrderService.getByPurchaseOrderId(purchaseOrderId);
-        } else if (supplierId != null) {
-            return purchaseOrderService.getBySupplier(supplierId);
-        } else if (status != null) {
-            return purchaseOrderService.getByStatus(status);
-        } else if (startDate != null && endDate != null) {
-            return purchaseOrderService.getByDateRange(startDate, endDate);
-        } else {
-            // 조건 없으면 전체 조회
-            return purchaseOrderService.getAllSearch();
-        }
+        // ✅ 2. 서비스 메소드 호출 시 'purchaseOrderId'를 첫 번째 인자로 전달
+        List<PurchaseOrderDto> orders = purchaseOrderService.searchPurchaseOrders(purchaseOrderId, startDate, endDate, supplierName, status);
+        return ResponseEntity.ok(orders);
     }
 
-    // 발주 상세 조회 (마스터 선택 시)
-    @GetMapping("/{purchaseOrderId}/details")
-    public List<PurchaseDetailDto> getOrderDetails(@PathVariable String purchaseOrderId) {
-        return purchaseOrderService.getOrderDetails(purchaseOrderId);
+    /**
+     * 📖 발주 단건 상세 조회
+     * GET /api/purchaseOrders/{purchaseOrderId}
+     */
+    @GetMapping("/{purchaseOrderId}")
+    public ResponseEntity<PurchaseOrderWithDetailsDto> getOrderById(@PathVariable String purchaseOrderId) {
+        PurchaseOrderWithDetailsDto order = purchaseOrderService.getPurchaseOrderById(purchaseOrderId);
+        return ResponseEntity.ok(order);
     }
 
-    // 발주 저장 (마스터 + 상세)
+    /**
+     * 💾 발주 저장 (생성/수정)
+     * POST /api/purchaseOrders
+     */
     @PostMapping
-    public PurchaseOrderWithDetailsDto savePurchaseOrder(@RequestBody PurchaseOrderWithDetailsDto purchaseOrderDto) {
-        return purchaseOrderService.savePurchaseOrderWithDetails(purchaseOrderDto);
+    public ResponseEntity<PurchaseOrderWithDetailsDto> saveOrder(@RequestBody PurchaseOrderWithDetailsDto dto) {
+        PurchaseOrderWithDetailsDto savedOrder = purchaseOrderService.savePurchaseOrderWithDetails(dto);
+        return ResponseEntity.ok(savedOrder);
     }
 
-    // 발주 상세 저장
-    @PostMapping("/{purchaseOrderId}/details")
-    public List<PurchaseDetailDto> saveOrderDetails(
-            @PathVariable String purchaseOrderId,
-            @RequestBody List<PurchaseDetailDto> details
-    ) {
-        return purchaseOrderService.saveOrderDetails(purchaseOrderId, details);
-    }
-
-    //마스터 + 상세 한번에 저장
-    @PostMapping("/withDetails")
-    public PurchaseOrderWithDetailsDto savePurchaseOrderWithDetails(
-            @RequestBody PurchaseOrderWithDetailsDto dto
-    ) {
-        return purchaseOrderService.savePurchaseOrderWithDetails(dto);
-    }
-
-    // 발주 삭제
+    /**
+     * 🗑️ 발주 삭제
+     * DELETE /api/purchaseOrders/{purchaseOrderId}
+     */
     @DeleteMapping("/{purchaseOrderId}")
-    public void deletePurchaseOrder(@PathVariable String purchaseOrderId) {
+    public ResponseEntity<Void> deleteOrder(@PathVariable String purchaseOrderId) {
         purchaseOrderService.deletePurchaseOrder(purchaseOrderId);
+        return ResponseEntity.noContent().build();
     }
-
-    @PostMapping("/{purchaseOrderId}/inspectionRequests")
-    public ResponseEntity<Void> requestInspections(
-            @PathVariable String purchaseOrderId,
-            @RequestBody List<InspectionRequestDto> inspectionRequests
-    ) {
-        inspectionRequests.forEach(req -> req.setPurchaseOrderId(purchaseOrderId));
-        purchaseOrderService.requestInspections(purchaseOrderId, inspectionRequests);
-        return ResponseEntity.ok().build();
-    }
-
-
-
 }
+

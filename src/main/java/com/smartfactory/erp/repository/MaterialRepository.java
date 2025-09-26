@@ -1,18 +1,11 @@
 package com.smartfactory.erp.repository;
 
 import com.smartfactory.erp.entity.MaterialEntity;
-import com.smartfactory.erp.entity.MaterialEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.util.List;
-
 @Repository
-public interface MaterialRepository extends JpaRepository<MaterialEntity, Integer> {
-
-    //조회
-    List<MaterialEntity> findByMaterialNmContaining (String materialNm);
-    List<MaterialEntity> findByCategoryContaining(String category);
-    List<MaterialEntity> findByMaterialNmContainingAndCategoryContaining(String materialNm, String category);
+public interface MaterialRepository extends JpaRepository<MaterialEntity, Integer>, JpaSpecificationExecutor<MaterialEntity> {
 }
+

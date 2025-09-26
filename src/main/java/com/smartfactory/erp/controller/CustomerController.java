@@ -1,65 +1,70 @@
+// CustomerController.java
+
 package com.smartfactory.erp.controller;
 
 import com.smartfactory.erp.dto.CustomerDto;
-import com.smartfactory.erp.entity.CustomerEntity;
 import com.smartfactory.erp.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
-@RestController //컨트롤러
-@RequestMapping("/api/customers") //기본 URL지정
-@RequiredArgsConstructor //final붙은 필드 @NonNull붙은 필드만 생성자 자동생성
+@RestController
+@RequestMapping("/api/customers")
+@RequiredArgsConstructor
 public class CustomerController {
 
     private final CustomerService customerService;
 
-    //조건 조회
+    // =========================
+    // 동적 조건 검색
+    // =========================
     @GetMapping
-    public List<CustomerDto> getCustomers( String customerNm, LocalDate contractDate){
-        //고객명 , 등록날짜 둘다 있는 경우
-        if (customerNm != null && contractDate != null) {
-            return customerService.getAllSearchCustomerContractDate(customerNm, contractDate);
-        } else if (customerNm != null) {
-            return customerService.getAllSearchCustomer(customerNm);
-        } else if (contractDate != null) {
-            return customerService.getAllSearchContractDate(contractDate);
-        } else {
-            return customerService.getAllSearch();
-        }
+    public ResponseEntity<List<CustomerDto>> searchCustomers(
+            @RequestParam(required = false) String customerNm,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate contractDate
+    ) {
+        List<CustomerDto> customers = customerService.searchCustomers(customerNm, contractDate);
+        return ResponseEntity.ok(customers);
     }
 
-    // 단건 조회
+    // =========================
+    // 상세 조회 (ID 기준)
+    // =========================
     @GetMapping("/{customerId}")
-    public CustomerDto getCustomer(@PathVariable("customerId") String customerId) {
-        return customerService.getCustomer(customerId);}
-
-    //저장
-    @PostMapping("")
-    public CustomerDto createCustomer(@RequestBody CustomerDto customer){
-        return customerService.saveCustomer(customer);
+    public ResponseEntity<CustomerDto> getCustomer(@PathVariable String customerId) {
+        CustomerDto customer = customerService.getCustomer(customerId);
+        return ResponseEntity.ok(customer);
     }
 
-    //모두저장
-    @PostMapping("/saveAll")
-    public List<CustomerDto> saveAll(@RequestBody List<CustomerDto> customers) {
-        return customerService.saveAllCustomers(customers);
-        // JPA가 id==null → insert, id!=null → update 처리
+    // =========================
+    // 등록 / 수정 (단건)
+    // - 참고: PUT을 수정 전용으로 분리할 수도 있습니다.
+    // =========================
+    @PostMapping
+    public ResponseEntity<CustomerDto> saveCustomer(@RequestBody CustomerDto customerDto) {
+        CustomerDto savedCustomer = customerService.saveCustomer(customerDto);
+        return ResponseEntity.ok(savedCustomer);
     }
 
-    @PutMapping("/{customerId}")
-    public CustomerDto updateCustomer(@PathVariable String customerId, @RequestBody CustomerDto customerDto) {
-        customerDto.setCustomerId(customerId);
-        return customerService.saveCustomer(customerDto);
+    // =========================
+    // 등록 / 수정 (여러 건)
+    // =========================
+    @PostMapping("/bulk")
+    public ResponseEntity<List<CustomerDto>> saveAllCustomers(@RequestBody List<CustomerDto> customers) {
+        List<CustomerDto> savedCustomers = customerService.saveAllCustomers(customers);
+        return ResponseEntity.ok(savedCustomers);
     }
 
+    // =========================
     // 삭제
+    // =========================
     @DeleteMapping("/{customerId}")
-    public void deleteCustomer(@PathVariable String customerId) {
+    public ResponseEntity<Void> deleteCustomer(@PathVariable String customerId) {
         customerService.deleteCustomer(customerId);
+        return ResponseEntity.noContent().build(); // 성공적으로 삭제되었음을 의미
     }
 }

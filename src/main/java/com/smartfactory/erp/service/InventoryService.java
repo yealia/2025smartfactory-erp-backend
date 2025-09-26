@@ -1,6 +1,7 @@
 package com.smartfactory.erp.service;
 
 import com.smartfactory.erp.dto.InventoryDto;
+import com.smartfactory.erp.dto.StockRequestDto;
 import com.smartfactory.erp.entity.MovementEntity;
 import com.smartfactory.erp.entity.InventoryEntity;
 import com.smartfactory.erp.repository.InventoryRepository;
@@ -119,5 +120,41 @@ public class InventoryService {
         return inventoryRepository.findByInventoryIdContainingAndMaterialId(inventoryId, materialId).stream()
                 .map(InventoryDto::fromEntity)
                 .toList();
+    }
+
+    // =================  메서드 =================
+    // MES ↔ ERP 연동 시 사용할 API, StockRequest DTO 기반
+
+    /** (운영) 재고 차감 */
+    @Transactional
+    public void deductStock(StockRequestDto req) {
+        InventoryEntity inv = inventoryRepository
+                .findByMaterialIdAndWarehouseAndLocation(req.getMaterialId(), req.getWarehouse(), req.getLocation())
+                .orElseThrow(() -> new IllegalArgumentException("재고 없음. materialId=" + req.getMaterialId()));
+        if (inv.getOnHand() < req.getQuantity()) {
+            throw new IllegalStateException("재고 부족: 현재=" + inv.getOnHand() + ", 요청=" + req.getQuantity());
+        }
+        inv.setOnHand(inv.getOnHand() - req.getQuantity());
+        inventoryRepository.save(inv);
+    }
+
+//    /** (운영) 재고 수정 */
+//    @Transactional
+//    public void updateStock(StockRequestDto req) {
+//        InventoryEntity inv = inventoryRepository
+//                .findByMaterialIdAndWarehouseAndLocation(req.getMaterialId(), req.getWarehouse(), req.getLocation())
+//                .orElseThrow(() -> new IllegalArgumentException("재고 없음. materialId=" + req.getMaterialId()));
+//        inv.setOnHand(req.getQuantity());
+//        inventoryRepository.save(inv);
+//    }
+
+    /** (운영) 재고 복구 */
+    @Transactional
+    public void restoreStock(StockRequestDto req) {
+        InventoryEntity inv = inventoryRepository
+                .findByMaterialIdAndWarehouseAndLocation(req.getMaterialId(), req.getWarehouse(), req.getLocation())
+                .orElseThrow(() -> new IllegalArgumentException("재고 없음. materialId=" + req.getMaterialId()));
+        inv.setOnHand(inv.getOnHand() + req.getQuantity());
+        inventoryRepository.save(inv);
     }
 }

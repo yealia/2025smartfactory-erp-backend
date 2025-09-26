@@ -23,6 +23,9 @@ public class InventoryDto {
     private Integer version;
     private String remark;
 
+    // onHand 대신 이걸 채워서 내려줌
+    private Integer materialCurrentStock;
+
     /** DTO -> Entity */
     public InventoryEntity toEntity() {
         InventoryEntity inventoryEntity = new InventoryEntity();
@@ -51,6 +54,13 @@ public class InventoryDto {
         inventoryDto.setCreatedAt(entity.getCreatedAt());
         inventoryDto.setUpdatedAt(entity.getUpdatedAt());
         inventoryDto.setVersion(entity.getVersion());
+
+        //  materialCurrentStock 세팅
+        if (entity.getMaterial() != null) {
+            inventoryDto.setMaterialCurrentStock(entity.getMaterial().getCurrentStock());
+        } else {
+            inventoryDto.setMaterialCurrentStock(null); // 또는 entity.getOnHand() 등 fallback
+        }
         return inventoryDto;
     }
 }

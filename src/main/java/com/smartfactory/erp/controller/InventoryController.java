@@ -1,11 +1,11 @@
 package com.smartfactory.erp.controller;
 
 import com.smartfactory.erp.dto.InventoryDto;
+import com.smartfactory.erp.dto.StockRequestDto;
 import com.smartfactory.erp.service.InventoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -36,4 +36,30 @@ public class InventoryController {
             return inventoryService.findAll();
         }
     }
+
+
+    // ================== MES ↔ ERP 연동 ==================
+    // StockRequest DTO를 받아서 창고/위치/자재ID 기반으로 정확히 처리
+
+    /** (운영) 재고 차감 */
+    @PostMapping("/deduct")
+    public ResponseEntity<Void> deductStock(@RequestBody StockRequestDto request) {
+        inventoryService.deductStock(request);
+        return ResponseEntity.ok().build();
+    }
+
+    /** (운영) 재고 복구 */
+    @PostMapping("/restore")
+    public ResponseEntity<Void> restoreStock(@RequestBody StockRequestDto request) {
+        inventoryService.restoreStock(request);
+        return ResponseEntity.ok().build();
+    }
+
+//    /** (운영) 재고 수정 */
+//    @PutMapping("/update")
+//    public ResponseEntity<Void> updateStock(@RequestBody StockRequestDto request) {
+//        inventoryService.updateStock(request);
+//        return ResponseEntity.ok().build();
+//    }
+
 }

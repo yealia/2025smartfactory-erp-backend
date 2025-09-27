@@ -6,5 +6,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MovementRepository extends JpaRepository<MovementEntity, Integer>, JpaSpecificationExecutor<MovementEntity> {
+public interface MovementRepository extends JpaRepository<MovementEntity, Integer>,
+        JpaSpecificationExecutor<MovementEntity> {
+    // qcId를 기준으로 데이터가 존재하는지 여부(true/false)를 반환합니다.
+    boolean existsByQcId(Integer qcId);
 }

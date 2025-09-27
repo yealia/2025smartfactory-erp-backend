@@ -1,6 +1,7 @@
 package com.smartfactory.erp.controller;
 
 import com.smartfactory.erp.dto.InventoryDto;
+import com.smartfactory.erp.dto.SimpleStockRequestDto;
 import com.smartfactory.erp.dto.StockRequestDto;
 import com.smartfactory.erp.service.InventoryService;
 import lombok.RequiredArgsConstructor;
@@ -92,5 +93,11 @@ public class InventoryController {
 //        inventoryService.updateStock(request);
 //        return ResponseEntity.ok().build();
 //    }
+
+    @PostMapping("/restore-by-material")
+    public ResponseEntity<Void> restoreStockByMaterialId(@RequestBody SimpleStockRequestDto request) {
+        inventoryService.restoreStockByMaterialId(request);
+        return ResponseEntity.ok().build();
+    }
 
 }

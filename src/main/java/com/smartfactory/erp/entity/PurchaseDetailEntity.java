@@ -35,7 +35,7 @@ public class PurchaseDetailEntity {
     private Integer inspectionStatus;
 
     @Column(name = "status")
-    private Integer status;
+    private Integer status;  // 0: 대기, 1: 승인, 2: 취소
 
     @Column(name = "remark", length = 255)
     private String remark;

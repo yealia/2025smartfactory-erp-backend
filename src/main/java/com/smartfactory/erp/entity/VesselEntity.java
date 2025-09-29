@@ -58,10 +58,6 @@ public class VesselEntity {
             columnDefinition = "datetime on update current_timestamp")
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id")
-    private ProjectEntity project;
-
     @OneToMany(mappedBy = "vessel")
     private List<ProjectPlanEntity> projectPlans;
 

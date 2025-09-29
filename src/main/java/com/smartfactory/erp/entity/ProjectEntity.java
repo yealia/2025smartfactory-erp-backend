@@ -37,11 +37,17 @@ public class ProjectEntity {
     @Column(name = "currency_code", nullable = false, length = 3)
     private String currencyCode = "KRW";
 
-    @Column(name = "progress_rate", nullable = false, precision = 5, scale = 2)
+    @Column(name = "progress_rate", precision = 5, scale = 2)
     private BigDecimal progressRate;
 
+    @Column(name = "status")
+    private Integer status;   // 0:계획, 1: 진행 중, 2: 생산 완료, 3: 출하 완료
+
+    @Column(name = "is_final")
+    private Boolean isFinal;
+
     @Column(name = "priority", nullable = false)
-    private Integer priority;
+    private Integer priority=1;
 
     @Column(name = "remark", length = 255)
     private String remark;
@@ -61,9 +67,6 @@ public class ProjectEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id")
     private EmployeeEntity employee;
-
-    @OneToMany(mappedBy = "project")
-    private List<VesselEntity> vessels;
 
     @OneToMany(mappedBy = "project")
     private List<ProjectPlanEntity> projectPlans;

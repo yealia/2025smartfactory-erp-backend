@@ -63,12 +63,6 @@ public class VesselService {
     public VesselDto saveVessel(VesselDto vesselDto) {
         VesselEntity entity = vesselDto.toEntity();
 
-        if (vesselDto.getProjectId() != null) {
-            ProjectEntity project = projectRepository.findById(vesselDto.getProjectId())
-                    .orElseThrow(() -> new IllegalArgumentException("Project with id " + vesselDto.getProjectId() + " not found."));
-            entity.setProject(project);
-        }
-
         VesselEntity saved = vesselRepository.save(entity);
         return VesselDto.fromEntity(saved);
     }
@@ -81,11 +75,6 @@ public class VesselService {
         List<VesselEntity> entities = vesselDtos.stream()
                 .map(dto -> {
                     VesselEntity entity = dto.toEntity();
-                    if (dto.getProjectId() != null) {
-                        ProjectEntity project = projectRepository.findById(dto.getProjectId())
-                                .orElseThrow(() -> new IllegalArgumentException("Project with id " + dto.getProjectId() + " not found."));
-                        entity.setProject(project);
-                    }
                     return entity;
                 })
                 .toList();

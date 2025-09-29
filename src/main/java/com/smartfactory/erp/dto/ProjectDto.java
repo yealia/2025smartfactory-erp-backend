@@ -19,6 +19,8 @@ public class ProjectDto {
     private BigDecimal executionBudget;
     private String currencyCode;
     private BigDecimal progressRate;
+    private Integer status;
+    private Boolean isFinal;
     private Integer priority;
     private String customerId;
     private String employeeId;
@@ -40,6 +42,8 @@ public class ProjectDto {
         projectEntity.setExecutionBudget(this.executionBudget);
         projectEntity.setCurrencyCode(this.currencyCode);
         projectEntity.setProgressRate(this.progressRate);
+        projectEntity.setStatus(this.status);
+        projectEntity.setIsFinal(this.isFinal);
         projectEntity.setPriority(this.priority);
         projectEntity.setRemark(this.remark);
         // customer와 employee는 Service단에서 찾아서 직접 설정
@@ -58,6 +62,8 @@ public class ProjectDto {
         dto.setExecutionBudget(entity.getExecutionBudget());
         dto.setCurrencyCode(entity.getCurrencyCode());
         dto.setProgressRate(entity.getProgressRate());
+        dto.setStatus(entity.getStatus());
+        dto.setIsFinal(entity.getIsFinal());
         dto.setPriority(entity.getPriority());
 
         if (entity.getCustomer() != null) {

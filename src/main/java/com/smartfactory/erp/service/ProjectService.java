@@ -98,7 +98,12 @@ public class ProjectService {
         EmployeeEntity employee = employeeRepository.findById(projectDto.getEmployeeId())
                 .orElseThrow(() -> new EntityNotFoundException("담당자를 찾을 수 없습니다. ID: " + projectDto.getEmployeeId()));
 
-        // 3. DTO의 내용으로 기존 엔티티의 값을 변경
+        // 3. 만약 isFinal이 true라면 수정을 막는 로직
+        if (Boolean.TRUE.equals(existingProject.getIsFinal())) {
+            throw new IllegalStateException("최종 확정된 프로젝트는 수정할 수 없습니다.");
+        }
+
+        // 4. DTO의 내용으로 기존 엔티티의 값을 변경
         existingProject.setProjectNm(projectDto.getProjectNm());
         existingProject.setStartDate(projectDto.getStartDate());
         existingProject.setDeliveryDate(projectDto.getDeliveryDate());

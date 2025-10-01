@@ -68,19 +68,24 @@ public class MaterialService {
         // 1. DTO를 기본 엔티티로 변환
         MaterialEntity entity = materialDto.toEntity();
 
-        // 2. DTO에 supplierId가 있다면, 실제 SupplierEntity 객체를 DB에서 조회
+        // 2. supplierId가 있다면 ID로 매핑
         if (materialDto.getSupplierId() != null) {
             SupplierEntity supplier = supplierRepository.findById(materialDto.getSupplierId())
                     .orElseThrow(() -> new IllegalArgumentException("해당 ID의 공급업체를 찾을 수 없습니다: " + materialDto.getSupplierId()));
-
-            // 3. 조회한 Supplier 객체를 MaterialEntity에 설정 (✅ JPA 관계 설정의 핵심)
+            entity.setSupplier(supplier);
+        }
+        // 3. supplierName이 있다면 이름으로 매핑
+        else if (materialDto.getSupplierName() != null && !materialDto.getSupplierName().trim().isEmpty()) {
+            SupplierEntity supplier = supplierRepository.findBySupplierName(materialDto.getSupplierName())
+                    .orElseThrow(() -> new IllegalArgumentException("해당 공급업체명을 찾을 수 없습니다: " + materialDto.getSupplierName()));
             entity.setSupplier(supplier);
         }
 
-        // 4. 저장 후, 다시 DTO로 변환하여 반환
+        // 4. 저장 후 DTO로 변환 반환
         MaterialEntity savedEntity = materialRepository.save(entity);
         return MaterialDto.fromEntity(savedEntity);
     }
+
 
     /**
      * ID로 특정 자재 정보를 삭제합니다.

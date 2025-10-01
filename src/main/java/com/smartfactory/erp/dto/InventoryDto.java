@@ -54,13 +54,13 @@ public class InventoryDto {
         inventoryDto.setCreatedAt(entity.getCreatedAt());
         inventoryDto.setUpdatedAt(entity.getUpdatedAt());
         inventoryDto.setVersion(entity.getVersion());
-
-        //  materialCurrentStock 세팅
-        if (entity.getMaterial() != null) {
-            inventoryDto.setMaterialCurrentStock(entity.getMaterial().getCurrentStock());
-        } else {
-            inventoryDto.setMaterialCurrentStock(null); // 또는 entity.getOnHand() 등 fallback
-        }
+//
+//        //  materialCurrentStock 세팅
+//        if (entity.getMaterial() != null) {
+//            inventoryDto.setMaterialCurrentStock(entity.getMaterial().getCurrentStock());
+//        } else {
+//            inventoryDto.setMaterialCurrentStock(null); // 또는 entity.getOnHand() 등 fallback
+//        }
         return inventoryDto;
     }
 }

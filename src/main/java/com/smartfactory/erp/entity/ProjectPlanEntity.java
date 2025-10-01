@@ -41,6 +41,10 @@ public class ProjectPlanEntity {
             columnDefinition = "datetime on update current_timestamp")
     private LocalDateTime updatedAt;
 
+    // 추가 최종 버전 여부
+    @Column(name = "is_final")
+    private Boolean isFinal = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     private ProjectEntity project;

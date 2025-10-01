@@ -34,8 +34,8 @@ public class EmployeeEntity {
     @Column(name = "email", length = 50)
     private String email;
 
-    @Column(name = "employee_status", length = 10)
-    private String employeeStatus; // 재직, 휴직, 퇴사
+    @Column(name = "status", length = 10)
+    private Integer Status; //  -- 0: 재직  1: 퇴직  2: 휴직
 
     @Column(name = "created_at", updatable = false, insertable = false,
             columnDefinition = "datetime default current_timestamp")

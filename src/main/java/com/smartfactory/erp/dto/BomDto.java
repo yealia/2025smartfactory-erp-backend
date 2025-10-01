@@ -27,6 +27,8 @@ public class BomDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime updatedAt;
 
+    private String materialName;
+
     /**
      * DTO -> Entity 변환
      */
@@ -87,6 +89,7 @@ public class BomDto {
         }
         if (entity.getMaterial() != null) {
             dto.setMaterialId(entity.getMaterial().getMaterialId());
+            dto.setMaterialName(entity.getMaterial().getMaterialNm());
         }
 
         return dto;

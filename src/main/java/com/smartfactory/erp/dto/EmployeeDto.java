@@ -25,7 +25,7 @@ public class EmployeeDto {
     @Email
     private String email;
 
-    private String employeeStatus;
+    private Integer status;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -34,6 +34,18 @@ public class EmployeeDto {
     // ✅ [추가] 화면 표시에 사용할 부서명과 직책명
     private String departmentNm;
     private String positionNm;
+
+    public String getEmployeeStatus() {
+        if (this.status == null) {
+            return "";
+        }
+        return switch (this.status) {
+            case 0 -> "재직";
+            case 1 -> "퇴사";
+            case 2 -> "휴직";
+            default -> "알 수 없음";
+        };
+    }
 
     // DTO -> Entity 변환
     public EmployeeEntity toEntity() {
@@ -45,7 +57,7 @@ public class EmployeeDto {
         entity.setHireDate(this.hireDate);
         entity.setPhone(this.phone);
         entity.setEmail(this.email);
-        entity.setEmployeeStatus(this.employeeStatus);
+        entity.setStatus(this.status);
         return entity;
     }
 
@@ -59,7 +71,7 @@ public class EmployeeDto {
         dto.setHireDate(entity.getHireDate());
         dto.setPhone(entity.getPhone());
         dto.setEmail(entity.getEmail());
-        dto.setEmployeeStatus(entity.getEmployeeStatus());
+        dto.setStatus(entity.getStatus());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 

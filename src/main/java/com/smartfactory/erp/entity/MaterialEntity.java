@@ -13,7 +13,6 @@ import java.util.List;
 public class MaterialEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "material_id", nullable = false)
     private Integer materialId;
 
@@ -40,9 +39,6 @@ public class MaterialEntity {
 
     @Column(name = "max_stock_quantity", nullable = false)
     private Integer maxStockQuantity;
-
-    @Column(name = "current_stock")
-    private Integer currentStock;
 
     @Column(name = "lead_time")
     private Integer leadTime;

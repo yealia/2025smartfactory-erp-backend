@@ -19,6 +19,7 @@ public class ProjectPlanDto {
     private BigDecimal progressRate;
     private Integer status;
     private String remark;
+    private Boolean isFinal;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -33,6 +34,7 @@ public class ProjectPlanDto {
         entity.setProgressRate(this.progressRate);
         entity.setStatus(this.status);
         entity.setRemark(this.remark);
+        entity.setIsFinal(this.isFinal != null ? this.isFinal : false);
         return entity;
     }
 
@@ -55,6 +57,7 @@ public class ProjectPlanDto {
         dto.setRemark(entity.getRemark());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setIsFinal(entity.getIsFinal() != null ? entity.getIsFinal() : false);
         return dto;
     }
 }

@@ -3,6 +3,7 @@ package com.smartfactory.erp.service;
 import com.smartfactory.erp.dto.BomDto;
 import com.smartfactory.erp.entity.*;
 import com.smartfactory.erp.repository.BomRepository;
+import com.smartfactory.erp.repository.MaterialRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class BomService {
 
     private final BomRepository bomRepository;
+    private final MaterialRepository materialRepository;
 
     /**
      * BOM 생성 (Create)
@@ -25,9 +27,19 @@ public class BomService {
     @Transactional // 쓰기 작업이므로 readOnly=false 적용
     public BomDto createBom(BomDto bomDto) {
         BomEntity bomEntity = bomDto.toEntity();
+
+        // ✨ [수정된 부분] 자재명으로 실제 자재 엔티티를 찾아서 연결합니다.
+        if (bomDto.getMaterialName() != null && !bomDto.getMaterialName().trim().isEmpty()) {
+            MaterialEntity material = materialRepository.findByMaterialNm(bomDto.getMaterialName())
+                    .orElseThrow(() -> new EntityNotFoundException("Material not found with name: " + bomDto.getMaterialName()));
+            bomEntity.setMaterial(material);
+        }
+        // (Vessel, Process, Block도 이름 등으로 찾아야 한다면 여기에 동일한 로직 추가)
+
         BomEntity savedEntity = bomRepository.save(bomEntity);
         return BomDto.fromEntity(savedEntity);
     }
+
 
     /**
      * BOM 단일 조회 (Read by ID)
@@ -86,10 +98,13 @@ public class BomService {
             block.setBlockId(bomDto.getBlockId());
             existingBom.setBlock(block);
         }
-        if (bomDto.getMaterialId() != null) {
-            MaterialEntity material = new MaterialEntity();
-            material.setMaterialId(bomDto.getMaterialId());
+        if (bomDto.getMaterialName() != null && !bomDto.getMaterialName().trim().isEmpty()) {
+            MaterialEntity material = materialRepository.findByMaterialNm(bomDto.getMaterialName())
+                    .orElseThrow(() -> new EntityNotFoundException("Material not found with name: " + bomDto.getMaterialName()));
             existingBom.setMaterial(material);
+        } else {
+            // 만약 자재명을 비워서 보냈다면, 연관관계를 끊습니다.
+            existingBom.setMaterial(null);
         }
 
         // 4. JPA의 더티 체킹(dirty checking)에 의해 트랜잭션 종료 시 자동으로 업데이트 쿼리 실행

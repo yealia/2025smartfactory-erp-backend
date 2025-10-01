@@ -19,9 +19,7 @@ public class MaterialDto {
     private BigDecimal currentPrice;
     private Integer minStockQuantity;
     private Integer maxStockQuantity;
-    private Integer currentStock;
     private Integer leadTime;
-    private Integer supplierId;
     private LocalDate lastPurchaseDate;
     private Integer status;
     private String warehouse;
@@ -31,6 +29,9 @@ public class MaterialDto {
     private LocalDateTime createdAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
+
+    private Integer supplierId;
+    private String supplierName;
 
     /**
      * DTO -> Entity 변환 (✅ Supplier 객체 설정은 Service 계층에서 처리하도록 파라미터 제거)
@@ -46,7 +47,6 @@ public class MaterialDto {
         entity.setCurrentPrice(this.currentPrice);
         entity.setMinStockQuantity(this.minStockQuantity);
         entity.setMaxStockQuantity(this.maxStockQuantity);
-        entity.setCurrentStock(this.currentStock);
         entity.setLeadTime(this.leadTime);
         entity.setLastPurchaseDate(this.lastPurchaseDate);
         entity.setStatus(this.status);
@@ -71,11 +71,11 @@ public class MaterialDto {
         dto.setCurrentPrice(entity.getCurrentPrice());
         dto.setMinStockQuantity(entity.getMinStockQuantity());
         dto.setMaxStockQuantity(entity.getMaxStockQuantity());
-        dto.setCurrentStock(entity.getCurrentStock());
         dto.setLeadTime(entity.getLeadTime());
         // 연관된 Supplier 객체가 존재할 경우 그 ID를 가져옵니다.
         if (entity.getSupplier() != null) {
             dto.setSupplierId(entity.getSupplier().getSupplierId());
+            dto.setSupplierName(entity.getSupplier().getSupplierName());
         }
         dto.setLastPurchaseDate(entity.getLastPurchaseDate());
         dto.setStatus(entity.getStatus());

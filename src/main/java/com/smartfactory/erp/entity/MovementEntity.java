@@ -14,7 +14,7 @@ public class MovementEntity {
     @Column(name = "movement_id", nullable = false)
     private Integer movementId;
 
-    @Column(name = "occurred_at", nullable = false)
+    @Column(name = "occurred_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime occurredAt;
 
     @Column(name = "qty", nullable = false)

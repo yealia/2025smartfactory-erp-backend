@@ -78,6 +78,28 @@ public class ProjectPlanService { // 인터페이스가 아닌 클래스로 직�
         ProjectPlanEntity existingEntity = projectPlanRepository.findById(planId)
                 .orElseThrow(() -> new EntityNotFoundException("Project Plan not found with id: " + planId));
 
+        // --- 🔽 수정/추가될 코드 시작 🔽 ---
+
+        // 1. Project, Vessel 정보 업데이트
+        if (dto.getProjectId() != null) {
+            ProjectEntity project = projectRepository.findById(dto.getProjectId())
+                    .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + dto.getProjectId()));
+            existingEntity.setProject(project);
+        }
+
+        if (dto.getVesselId() != null) {
+            VesselEntity vessel = vesselRepository.findById(dto.getVesselId())
+                    .orElseThrow(() -> new EntityNotFoundException("Vessel not found with id: " + dto.getVesselId()));
+            existingEntity.setVessel(vessel);
+        }
+
+        // 2. isFinal 필드 업데이트 추가
+        if (dto.getIsFinal() != null) {
+            existingEntity.setIsFinal(dto.getIsFinal());
+        }
+
+        // --- 🔼 수정/추가될 코드 끝 🔼 ---
+
         existingEntity.setPlanScope(dto.getPlanScope());
         existingEntity.setStartDate(dto.getStartDate());
         existingEntity.setEndDate(dto.getEndDate());
@@ -85,7 +107,10 @@ public class ProjectPlanService { // 인터페이스가 아닌 클래스로 직�
         existingEntity.setStatus(dto.getStatus());
         existingEntity.setRemark(dto.getRemark());
 
-        return ProjectPlanDto.fromEntity(existingEntity);
+        // save()를 호출하여 변경 감지(dirty checking)를 명시적으로 트리거할 수 있습니다.
+        ProjectPlanEntity updatedEntity = projectPlanRepository.save(existingEntity);
+
+        return ProjectPlanDto.fromEntity(updatedEntity);
     }
 
     @Transactional

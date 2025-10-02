@@ -37,6 +37,7 @@ public class InventoryDto {
         inventoryEntity.setReservedQty(this.reservedQty != null ? this.reservedQty : 0);
         inventoryEntity.setSafetyStock(this.safetyStock != null ? this.safetyStock : 0);
         inventoryEntity.setReorderPoint(this.reorderPoint != null ? this.reorderPoint : 0);
+        inventoryEntity.setRemark(this.remark);
         // createdAt/updatedAt/version은 JPA가 관리
         return inventoryEntity;
     }
@@ -54,6 +55,7 @@ public class InventoryDto {
         inventoryDto.setCreatedAt(entity.getCreatedAt());
         inventoryDto.setUpdatedAt(entity.getUpdatedAt());
         inventoryDto.setVersion(entity.getVersion());
+        inventoryDto.setRemark(entity.getRemark());
 //
 //        //  materialCurrentStock 세팅
 //        if (entity.getMaterial() != null) {

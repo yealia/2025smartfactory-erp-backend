@@ -13,6 +13,7 @@ import java.util.List;
 public class MaterialEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "material_id", nullable = false)
     private Integer materialId;
 

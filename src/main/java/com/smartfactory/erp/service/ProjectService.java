@@ -116,8 +116,11 @@ public class ProjectService {
         existingProject.setRemark(projectDto.getRemark());
         existingProject.setCustomer(customer);
         existingProject.setEmployee(employee);
+        existingProject.setStatus(projectDto.getStatus());
+        existingProject.setIsFinal(projectDto.getIsFinal());
 
         // 4. 트랜잭션이 종료될 때 JPA의 'Dirty Checking'에 의해 자동으로 UPDATE 쿼리가 실행됨
+        // .save가 필요 없다.
         return ProjectDto.fromEntity(existingProject);
     }
 

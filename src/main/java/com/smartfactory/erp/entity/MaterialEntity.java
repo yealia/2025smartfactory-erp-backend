@@ -16,6 +16,9 @@ public class MaterialEntity {
     @Column(name = "material_id", nullable = false)
     private Integer materialId;
 
+    @Column(name = "material_code", nullable = false, length = 50)
+    private String materialCode;
+
     @Column(name = "material_nm", nullable = false, length = 50)
     private String materialNm;
 

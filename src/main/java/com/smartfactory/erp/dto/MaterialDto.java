@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Data
 public class MaterialDto {
     private Integer materialId;
+    private String materialCode;
     private String materialNm;
     private String category;
     private String specification;
@@ -39,6 +40,7 @@ public class MaterialDto {
     public MaterialEntity toEntity() {
         MaterialEntity entity = new MaterialEntity();
         entity.setMaterialId(this.materialId);
+        entity.setMaterialCode(this.materialCode);
         entity.setMaterialNm(this.materialNm);
         entity.setCategory(this.category);
         entity.setSpecification(this.specification);
@@ -63,6 +65,7 @@ public class MaterialDto {
     public static MaterialDto fromEntity(MaterialEntity entity) {
         MaterialDto dto = new MaterialDto();
         dto.setMaterialId(entity.getMaterialId());
+        dto.setMaterialCode(entity.getMaterialCode());
         dto.setMaterialNm(entity.getMaterialNm());
         dto.setCategory(entity.getCategory());
         dto.setSpecification(entity.getSpecification());
